@@ -1,0 +1,8 @@
+customtkinter
+numpy
+faster-whisper
+yt-dlp
+pillow
+# Optional: speeds up the speech recognition on an NVIDIA graphics card (large downloads, Windows):
+# nvidia-cublas-cu12
+# nvidia-cudnn-cu12

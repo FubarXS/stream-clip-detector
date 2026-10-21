@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Your settings and run files (created next to the program)
+gui_settings.json
+run_config.json
+crash_log.txt
+
+# Output of the program and big media - never upload these
+clips/
+clips2/
+downloads/
+thumbs/
+finished/
+results.json
+finished.json
+*.mp4
+*.mkv
+*.mov
+*.ts
+*.flv
+*.webm
+
+# Editors / system
+.vscode/
+Thumbs.db
