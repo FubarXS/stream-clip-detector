@@ -153,6 +153,8 @@ class LayoutMixin:
                     "of every sentence - experimental, switch back if the text looks odd.", self.lang_name, LANGS)
         self.option(sig, "Processor", "GPU (NVIDIA) is much faster. If the GPU fails or you have none, choose CPU "
                     "- slower but works everywhere.", self.dev_name, DEVICES)
+        ctk.CTkSwitch(sig, text="Reuse the saved transcript of this video", variable=self.vars["reuse_transcript"],
+                      **SWITCH).pack(anchor="w", padx=16, pady=(8, 0))
         ctk.CTkFrame(sig, height=10, fg_color="transparent").pack()
 
         ai = self.card(left, "AI suggestions (optional)",

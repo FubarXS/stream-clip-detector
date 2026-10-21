@@ -8,6 +8,7 @@ import os
 import clip_detector as c
 import exports
 import llm_judge
+import transcript_cache
 
 
 def main():
@@ -22,6 +23,7 @@ def main():
     ap.add_argument("--extra-tags", default="")
     ap.add_argument("--tag-pool", type=int, default=50)
     ap.add_argument("--no-transcript-files", action="store_true", help="do not save the .srt subtitles / transcript text")
+    ap.add_argument("--no-transcript-cache", action="store_true", help="always transcribe again")
     ap.add_argument("--no-info-files", action="store_true", help="no *_info.txt file per clip")
     args = ap.parse_args()
     folder = os.path.join(args.out, "finished")
@@ -34,7 +36,9 @@ def main():
         audio = c.load_audio(clip)
         dur = len(audio) / c.SR
         _, delta = c.loudness_score(audio, 6.0)
-        segs = c.transcribe(audio, args.model, args.lang, args.game, args.device)
+        segs = transcript_cache.get_or_run(
+            args.out, clip, (args.model, args.lang), lambda: c.transcribe(audio, args.model, args.lang, args.game, args.device),
+            not args.no_transcript_cache)
         stem = os.path.splitext(name)[0]
         if not args.no_transcript_files:
             exports.write_srt(segs, os.path.join(folder, stem + ".srt"))

@@ -39,6 +39,14 @@ def info_path(it, out):
     return os.path.join(folder, stem + "_info.txt")
 
 
+def own_files(it, out):
+    """Files we created for a clip besides the video and thumbnail: its info file (and the .srt of a finished clip)."""
+    files = [info_path(it, out)]
+    if it.get("kind") == "finished":
+        files.append(os.path.join(out, "finished", os.path.splitext(os.path.basename(it.get("file") or ""))[0] + ".srt"))
+    return files
+
+
 def write_info(it, path, include_transcript=True):
     """Text file with everything used for a clip: time, why, AI notes, title, description, hashtags, transcript.
     Texts edited in the Clips window (it['edits']['General']) win over the AI originals."""

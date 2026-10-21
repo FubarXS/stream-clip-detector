@@ -94,6 +94,7 @@ CS = {
 CS.update({
     "Save an info file next to each clip": "Uložit ke každému klipu info soubor",
     "Save transcript files (.txt, .srt)": "Ukládat soubory s přepisem (.txt, .srt)",
+    "Reuse the saved transcript of this video": "Použít uložený přepis tohoto videa",
 })
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 

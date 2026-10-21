@@ -79,9 +79,10 @@ class RunnerMixin:
 
     @staticmethod
     def save_flags(cfg):
-        """Switches for the info file and transcript files (the speech is analyzed either way)."""
+        """Switches for the info file, transcript files and the transcript cache."""
         return (["--no-info-files"] if not cfg["save_info"] else []) + \
-               (["--no-transcript-files"] if not cfg["save_transcript"] else [])
+               (["--no-transcript-files"] if not cfg["save_transcript"] else []) + \
+               (["--no-transcript-cache"] if not cfg["reuse_transcript"] else [])
 
     def worker(self, cfg, measure=False, finished=None):
         try:

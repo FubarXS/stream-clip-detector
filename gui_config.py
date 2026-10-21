@@ -22,7 +22,7 @@ DEFAULTS = {
     "video": "", "url": "", "out": os.path.join(HERE, "clips"),
     "top": "15", "before": "20", "after": "10", "gap": "60", "threshold": "3.0", "loud_db": "6",
     "model": "medium", "lang": "en", "device": "auto", "whisper": True, "cut": True, "loud_on": True,
-    "save_transcript": True, "save_info": True,
+    "save_transcript": True, "save_info": True, "reuse_transcript": True,
     "secret": "clip that", "secret_back": "45", "audio_track": "1",
     "ui_lang": "en", "game": "", "extra_tags": "", "llm_on": False, "llm_model": "gemma3:12b", "min_funny": "5", "tag_pool": "50",
     "kw_en": "\n".join(keywords.KEYWORDS_EN), "kw_cs": "\n".join(keywords.KEYWORDS_CS), "kw_strong": "",

@@ -22,6 +22,7 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
 | `platforms.py` | Per-platform rules (hashtag counts, title length) and text building |
 | `analyze_finished.py` | Analysis of already finished clips |
+| `transcript_cache.py` | Saves/reuses the Whisper transcript per recording in `<out>/cache/` |
 | `exports.py` | Thumbnails, `.srt`, `posts.txt`, `*_info.txt` per clip |
 | `ollama_models.py` | Lists installed Ollama models and GPU memory |
 | `make_icon.py`, `make_assets.py` | Generate `icons/` |
@@ -32,6 +33,8 @@ GUI -> subprocess `clip_detector.py` (or `analyze_finished.py`) -> prints progre
 The Clips tab reads the JSON files; favorites and typed edits are written back into them.
 
 ## Conventions
+- Deleting a clip in the Clips window also deletes its `_info.txt` (and the `.srt` of a finished clip).
+- A second analysis of the same recording reuses the saved transcript (`--no-transcript-cache` forces a new one).
 - Clips are cut with `-map 0:v:0 -map 0:a?` so every audio track of the recording (OBS multitrack) stays in the clip.
 - Each clip gets `<clip name>_info.txt` (time, why, AI notes, title, description, hashtags, transcript). Finished clips: `<out>/finished/`.
   Edits in the Clips window are written back to it on close. Switches: `--no-info-files`, `--no-transcript-files` (speech is still analyzed).

@@ -8,6 +8,7 @@ from tkinter import messagebox
 
 from brand import TEXT, MUTED, ACCENT, ORANGE, BG, PANEL, BORDER, BORDER_H, CARD, ENTRY, BOX, BTN2, BTN_H, RADIUS_MD, SEG, SWITCH, BrandButton
 from gui_widgets import Tip
+import exports
 from platforms import PLATFORMS
 
 PIL_OK = importlib.util.find_spec("PIL") is not None
@@ -267,7 +268,8 @@ class ClipsPanel(ctk.CTkFrame):
         if ans is None:
             return
         if ans:
-            for p in (f, it.get("thumb")):
+            extra = exports.own_files(it, self.app.clips_dir) if f else []  # the *_info.txt goes with its clip
+            for p in (f, it.get("thumb"), *extra):
                 try:
                     if p and os.path.exists(p):
                         os.remove(p)

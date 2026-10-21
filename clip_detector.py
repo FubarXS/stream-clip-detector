@@ -18,6 +18,7 @@ import threading
 import unicodedata
 import subprocess
 import numpy as np
+import transcript_cache
 
 SR = 16000  # analysis sample rate
 
@@ -264,6 +265,8 @@ def main():
     ap.add_argument("--no-whisper", action="store_true")
     ap.add_argument("--no-transcript-files", action="store_true",
                     help="speech is still transcribed (needed for the analysis) but transcript files are not saved")
+    ap.add_argument("--no-transcript-cache", action="store_true",
+                    help="always transcribe again, even if a saved transcript of this recording exists")
     ap.add_argument("--no-info-files", action="store_true", help="no *_info.txt file next to each clip")
     ap.add_argument("--no-cut", action="store_true", help="timestamps only, no cutting")
     ap.add_argument("--out", default="clips")
@@ -290,7 +293,9 @@ def main():
     segments = []
     if not args.no_whisper:
         prompt = ", ".join(([args.secret] if args.secret else []) + STRONG_KEYWORDS + KEYWORDS)[:200]
-        segments = transcribe(audio, args.model, args.lang, prompt, args.device)
+        segments = transcript_cache.get_or_run(
+            args.out, args.video, (args.audio_track, args.model, args.lang, args.secret),
+            lambda: transcribe(audio, args.model, args.lang, prompt, args.device), not args.no_transcript_cache)
         kwarr = keyword_score(segments, n)
         total = total + kwarr
         if not args.no_transcript_files:

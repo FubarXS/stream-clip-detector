@@ -56,7 +56,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
                 V[k] = tk.DoubleVar(value=float(cfg[k]))
             except Exception:
                 V[k] = tk.DoubleVar(value=float(DEFAULTS[k]))
-        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info"):
+        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info", "reuse_transcript"):
             V[k] = tk.BooleanVar(value=bool(cfg[k]))
         pick = lambda d, v, default: next((n for n, c in d.items() if c == v), default)
         self.model_name = tk.StringVar(value=pick(MODELS, cfg["model"], "Balanced"))
@@ -105,6 +105,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
             "model": MODELS[self.model_name.get()], "lang": LANGS[self.lang_name.get()],
             "device": DEVICES[self.dev_name.get()], "whisper": v["whisper"].get(), "cut": v["cut"].get(),
             "save_transcript": v["save_transcript"].get(), "save_info": v["save_info"].get(),
+            "reuse_transcript": v["reuse_transcript"].get(),
             "secret": v["secret"].get().strip(), "secret_back": i("secret_back"),
             "audio_track": v["audio_track"].get(), "tag_pool": i("tag_pool"),
             "ui_lang": self.lang, "game": v["game"].get().strip(), "extra_tags": v["extra_tags"].get().strip(),
@@ -169,7 +170,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
             return
         for k in NUM:
             self.vars[k].set(float(DEFAULTS[k]))
-        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info"):
+        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info", "reuse_transcript"):
             self.vars[k].set(DEFAULTS[k])
         first = lambda d, v: next(n for n, c in d.items() if c == v)
         self.model_name.set(first(MODELS, DEFAULTS["model"]))
