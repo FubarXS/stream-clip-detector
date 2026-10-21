@@ -9,6 +9,7 @@ It does **not** depend on chat: it listens to loudness and to what you say. Ever
 - **Speech to text** with [faster-whisper](https://github.com/SYSTRAN/faster-whisper): full transcript with timestamps and `.srt` subtitles.
 - **Optional AI helper** (free, local, via [Ollama](https://ollama.com)): rates how funny a clip is, writes a title and caption, and suggests hashtags and meme ideas for TikTok, YouTube Shorts and Instagram Reels.
 - **Finished clips**: add a clip you already edited (for example exported from DaVinci Resolve) and get the same texts for it.
+- Saves an `_info.txt` next to every clip (title, hashtags, transcript); transcript files can be switched off. All audio tracks of an OBS recording are kept in the clips.
 - Mark favorites, remove clips, edit the texts and copy them. Czech and English interface.
 
 ## Install (Windows)

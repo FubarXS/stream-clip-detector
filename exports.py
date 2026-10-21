@@ -31,6 +31,51 @@ def write_srt(segments, path):
             f.write(f"{i}\n{t(s[0])} --> {t(s[1])}\n{s[2]}\n\n")
 
 
+def info_path(it, out):
+    """Where the info file of a clip lives: next to the clip (clip_04_0-46-03.mp4 -> clip_04_0-46-03_info.txt);
+    finished clips (your own files) get theirs in <out>/finished/."""
+    stem = os.path.splitext(os.path.basename(it.get("file") or "clip"))[0]
+    folder = os.path.join(out, "finished") if it.get("kind") == "finished" else os.path.dirname(it.get("file") or out)
+    return os.path.join(folder, stem + "_info.txt")
+
+
+def write_info(it, path, include_transcript=True):
+    """Text file with everything used for a clip: time, why, AI notes, title, description, hashtags, transcript.
+    Texts edited in the Clips window (it['edits']['General']) win over the AI originals."""
+    a = it.get("ai") or {}
+    g = (it.get("edits") or {}).get("General") or {}
+    title = g.get("title", a.get("title", ""))
+    desc = g.get("description", a.get("description") or a.get("why", ""))
+    tags = g.get("hashtags", " ".join(a.get("hashtags", [])))
+    rows = [f"Clip: {os.path.basename(it.get('file') or '(not cut)')}",
+            f"Time: {hms(it['start'])} - {hms(it['end'])} (peak {hms(it['peak'])})", f"Score: {it['score']}",
+            f"Why picked: {it['why']}"]
+    if a:
+        rows.append(f"AI funny rating: {a.get('funny', 0):g}/10 - {a.get('why', '')}")
+    rows += ["", f"Title: {title}", f"Description: {desc}", f"Hashtags: {tags}"]
+    if include_transcript:
+        rows += ["", "Transcript:", it.get("lines") or it.get("text") or ""]
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:  # content is ready before the file is opened
+            f.write("\n".join(rows) + "\n")
+    except OSError as e:
+        print(f"   Could not write {os.path.basename(path)}: {e}", flush=True)
+
+
+def sync_info(it, out):
+    """After editing in the Clips window: refresh an info file that already exists (keeps its transcript choice)."""
+    path = info_path(it, out)
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, encoding="utf-8") as f:
+            had = "\nTranscript:\n" in f.read()
+    except OSError:
+        return
+    write_info(it, path, had)
+
+
 def write_posts(items, out, name="posts.txt"):
     """For every clip: title, description, hashtags (top 5 / top 10 / all) and a section per platform."""
     from platforms import PLATFORMS, post_text

@@ -77,13 +77,19 @@ class RunnerMixin:
                 self.q.put(("log", line + "\n"))
         return self.proc.wait()
 
+    @staticmethod
+    def save_flags(cfg):
+        """Switches for the info file and transcript files (the speech is analyzed either way)."""
+        return (["--no-info-files"] if not cfg["save_info"] else []) + \
+               (["--no-transcript-files"] if not cfg["save_transcript"] else [])
+
     def worker(self, cfg, measure=False, finished=None):
         try:
             if finished:
                 self.exec([PY, "-u", os.path.join(HERE, "analyze_finished.py"), *finished, "--model", cfg["model"],
                            "--lang", cfg["lang"], "--device", cfg["device"], "--llm", cfg["llm_model"],
                            "--game", cfg["game"], "--extra-tags", cfg["extra_tags"], "--tag-pool", cfg["tag_pool"],
-                           "--out", cfg["out"]])
+                           "--out", cfg["out"], *self.save_flags(cfg)])
                 return
             video = cfg["video"]
             if cfg["url"]:
@@ -131,6 +137,7 @@ class RunnerMixin:
                 cmd.append("--no-whisper")
             if not cfg["cut"]:
                 cmd.append("--no-cut")
+            cmd += self.save_flags(cfg)
             if self.exec(cmd) != 0 and not self.cancel:
                 self.q.put(("log", "\nThe analysis stopped with an error (see above).\n"))
         except Exception:

@@ -91,6 +91,10 @@ CS = {
     "6 dB is where a sound is clearly louder than normal speech level; lower picks up ordinary variation.": "6 dB je hranice, kdy je zvuk jasně hlasitější než běžná řeč; nižší hodnota chytá obyčejné kolísání.",
     "5/10 keeps clips the AI finds at least moderately funny.": "5/10 ponechá klipy, které AI považuje aspoň za středně vtipné.",
 }
+CS.update({
+    "Save an info file next to each clip": "Uložit ke každému klipu info soubor",
+    "Save transcript files (.txt, .srt)": "Ukládat soubory s přepisem (.txt, .srt)",
+})
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 
 

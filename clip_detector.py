@@ -232,8 +232,10 @@ def snippet(segments, t):
 
 
 def cut(video, start, end, out_path):
+    # -map 0:v:0 -map 0:a? = the video + ALL audio tracks (OBS multitrack 1-6 stay separate in the clip).
+    # Without -map ffmpeg would keep just one audio track.
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", str(start), "-i", video,
-                    "-t", str(end - start), "-c", "copy", out_path], check=True)
+                    "-t", str(end - start), "-map", "0:v:0", "-map", "0:a?", "-c", "copy", out_path], check=True)
 
 
 def main():
@@ -260,6 +262,9 @@ def main():
     ap.add_argument("--secret", default="", help="secret word = manual marker")
     ap.add_argument("--secret-back", type=int, default=45, help="seconds to look back for the secret word")
     ap.add_argument("--no-whisper", action="store_true")
+    ap.add_argument("--no-transcript-files", action="store_true",
+                    help="speech is still transcribed (needed for the analysis) but transcript files are not saved")
+    ap.add_argument("--no-info-files", action="store_true", help="no *_info.txt file next to each clip")
     ap.add_argument("--no-cut", action="store_true", help="timestamps only, no cutting")
     ap.add_argument("--out", default="clips")
     args = ap.parse_args()
@@ -288,7 +293,8 @@ def main():
         segments = transcribe(audio, args.model, args.lang, prompt, args.device)
         kwarr = keyword_score(segments, n)
         total = total + kwarr
-        save_transcript(segments, args.out)
+        if not args.no_transcript_files:
+            save_transcript(segments, args.out)
 
     for fn in EXTRA_SIGNALS:
         total = total + fn(args.video, n, args)
@@ -341,6 +347,8 @@ def main():
         if not args.no_cut:
             it["file"] = os.path.join(args.out, name)
             cut(args.video, it["start"], it["end"], it["file"])
+            if not args.no_info_files:
+                exports.write_info(it, exports.info_path(it, args.out), not args.no_transcript_files)
         it["thumb"] = exports.make_thumb(args.video, it["peak"], os.path.join(args.out, "thumbs", name[:-4] + ".png"))
         tag = "MARKER" if it["kind"] == "marker" else "clip"
         block = [f"#{i:02d} [{tag}]  {fmt(it['start'])} - {fmt(it['end'])}  score {it['score']}", f"    why: {it['why']}"]

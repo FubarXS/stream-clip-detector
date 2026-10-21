@@ -21,6 +21,8 @@ def main():
     ap.add_argument("--game", default="")
     ap.add_argument("--extra-tags", default="")
     ap.add_argument("--tag-pool", type=int, default=50)
+    ap.add_argument("--no-transcript-files", action="store_true", help="do not save the .srt subtitles / transcript text")
+    ap.add_argument("--no-info-files", action="store_true", help="no *_info.txt file per clip")
     args = ap.parse_args()
     folder = os.path.join(args.out, "finished")
     os.makedirs(folder, exist_ok=True)
@@ -34,7 +36,8 @@ def main():
         _, delta = c.loudness_score(audio, 6.0)
         segs = c.transcribe(audio, args.model, args.lang, args.game, args.device)
         stem = os.path.splitext(name)[0]
-        exports.write_srt(segs, os.path.join(folder, stem + ".srt"))
+        if not args.no_transcript_files:
+            exports.write_srt(segs, os.path.join(folder, stem + ".srt"))
         peak = int(delta.argmax()) if len(delta) else 0
         thumb = os.path.join(folder, "thumbs", stem + ".png")
         new.append({"kind": "finished", "peak": peak, "start": 0, "end": int(dur), "score": 0, "ai": None,
@@ -50,6 +53,9 @@ def main():
             for it in talk:
                 if it["ai"]:
                     it["links"] = llm_judge.links(it["ai"]["meme_terms"])
+    if not args.no_info_files:
+        for it in new:
+            exports.write_info(it, exports.info_path(it, args.out), not args.no_transcript_files)
     path = os.path.join(args.out, "finished.json")
     try:
         with open(path, encoding="utf-8") as f:

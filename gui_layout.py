@@ -110,7 +110,11 @@ class LayoutMixin:
         self.slider(sel, "Seconds after peak", "after", 5, 60, 1, "How much is included after the moment.", " s")
         self.slider(sel, "Min. gap between clips", "gap", 20, 300, 5, "Prevents several clips of the same moment.", " s")
         ctk.CTkSwitch(sel, text="Cut video clips (off = timestamps only)", variable=self.vars["cut"],
-                      **SWITCH).pack(anchor="w", padx=16, pady=(10, 14))
+                      **SWITCH).pack(anchor="w", padx=16, pady=(10, 0))
+        ctk.CTkSwitch(sel, text="Save an info file next to each clip", variable=self.vars["save_info"],
+                      **SWITCH).pack(anchor="w", padx=16, pady=(8, 0))
+        ctk.CTkSwitch(sel, text="Save transcript files (.txt, .srt)", variable=self.vars["save_transcript"],
+                      **SWITCH).pack(anchor="w", padx=16, pady=(8, 14))
 
         sig = self.card(left, "Detection signals")
         self.option(sig, "Audio track for analysis",
