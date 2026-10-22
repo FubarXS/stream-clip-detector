@@ -130,13 +130,14 @@ def scan_folder(out, known):
         names = sorted(os.listdir(out))
     except OSError:
         return []
-    seen = {os.path.normcase(os.path.abspath(k)) for k in known if k}
+    # compare file NAMES: results.json may store the path differently (relative / other working folder) than the window sees it
+    seen = {os.path.normcase(os.path.basename(k)) for k in known if k}
     found = []
     for n in names:
         stem, ext = os.path.splitext(n)
         m = re.match(r"(?:clip|marker)_\d+_(\d+)-(\d\d)-(\d\d)$", stem)
         path = os.path.join(out, n)
-        if ext.lower() not in VIDEO_EXT or not m or os.path.normcase(os.path.abspath(path)) in seen:
+        if ext.lower() not in VIDEO_EXT or not m or os.path.normcase(n) in seen:
             continue
         it = read_info(os.path.join(out, stem + "_info.txt"), path)
         if not it:  # no info file: the clip name still tells the time of the peak
