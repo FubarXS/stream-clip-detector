@@ -1,0 +1,53 @@
+# Builds the Windows app (no Python needed by the user) when a version tag like v0.4.0 is pushed,
+# and attaches the zip files to the GitHub release of that tag. Can also be started by hand (Actions tab).
+name: Build Windows app
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        variant: [cpu, gpu]   # gpu = includes the NVIDIA libraries (much larger download)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install packages
+        run: python -m pip install -r requirements.txt pyinstaller
+      - name: Install NVIDIA libraries (gpu variant)
+        if: matrix.variant == 'gpu'
+        run: python -m pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+      - name: Build
+        env:
+          INCLUDE_CUDA: ${{ matrix.variant == 'gpu' && '1' || '0' }}
+        run: python -m PyInstaller stream_clip_detector.spec --noconfirm
+      - name: Add ffmpeg (ffmpeg, ffprobe, ffplay)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_tmp
+          $src = (Get-ChildItem ffmpeg_tmp -Directory | Select-Object -First 1).FullName
+          New-Item -ItemType Directory dist/StreamClipDetector/ffmpeg | Out-Null
+          Copy-Item "$src/bin/ffmpeg.exe", "$src/bin/ffprobe.exe", "$src/bin/ffplay.exe" dist/StreamClipDetector/ffmpeg/
+          Copy-Item "$src/LICENSE" dist/StreamClipDetector/ffmpeg/LICENSE.txt
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path dist/StreamClipDetector -DestinationPath StreamClipDetector-windows-${{ matrix.variant }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StreamClipDetector-windows-${{ matrix.variant }}
+          path: StreamClipDetector-windows-${{ matrix.variant }}.zip
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: StreamClipDetector-windows-${{ matrix.variant }}.zip

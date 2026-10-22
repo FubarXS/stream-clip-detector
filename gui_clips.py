@@ -8,6 +8,8 @@ from tkinter import messagebox
 
 from brand import TEXT, MUTED, ACCENT, ORANGE, BG, PANEL, BORDER, BORDER_H, CARD, ENTRY, BOX, BTN2, BTN_H, RADIUS_MD, SEG, SWITCH, BrandButton
 from gui_widgets import Tip
+import gui_gallery
+from gui_player import open_player
 import exports
 from platforms import PLATFORMS
 
@@ -82,6 +84,8 @@ class ClipsPanel(ctk.CTkFrame):
         self.app, self.items, self.states = app, [], []
         self.fav_only = tk.BooleanVar(master=self, value=False)
         self.T = lambda s: app.tr(s)
+        self.mode = app.vars["clips_view"]  # "list" or "gallery"
+        self.detail, self._cols, self._job = None, 0, None
         h = ctk.CTkFrame(self, fg_color="transparent")
         h.pack(fill="x", pady=(2, 6))
         self.title_lbl = ctk.CTkLabel(h, text="", text_color=TEXT, font=ctk.CTkFont(size=20, weight="bold"))
@@ -90,10 +94,16 @@ class ClipsPanel(ctk.CTkFrame):
         self.add_btn.pack(side="right")
         self.all_btn = ctk.CTkButton(h, text="Copy all posts", width=150, height=32, command=self.copy_all, **BTN2)
         self.all_btn.pack(side="right", padx=(0, 10))
-        ctk.CTkButton(h, text="Open folder", width=110, height=32, command=app.open_out, **BTN2).pack(side="right", padx=(0, 8))
-        ctk.CTkButton(h, text="Reload", width=90, height=32, command=app.load_clips, **BTN2).pack(side="right", padx=(0, 8))
-        ctk.CTkSwitch(h, text="Favorites only", variable=self.fav_only, command=lambda: self.refresh(self.items),
-                      **SWITCH).pack(side="right", padx=(0, 14))
+        h2 = ctk.CTkFrame(self, fg_color="transparent")
+        h2.pack(fill="x", pady=(0, 6))
+        self.view_btn = ctk.CTkSegmentedButton(h2, values=["List", "Gallery"], command=self.set_mode, height=30, width=200, **SEG)
+        self.view_btn.pack(side="left")
+        ctk.CTkSwitch(h2, text="Favorites only", variable=self.fav_only, command=lambda: self.refresh(self.items),
+                      **SWITCH).pack(side="left", padx=(16, 0))
+        ctk.CTkButton(h2, text="Reload", width=90, height=30, command=app.load_clips, **BTN2).pack(side="right")
+        ctk.CTkButton(h2, text="Open folder", width=110, height=30, command=app.open_out, **BTN2).pack(side="right", padx=(0, 8))
+        ctk.CTkButton(h2, text="Load folder...", width=120, height=30, command=app.pick_clips_folder, **BTN2).pack(side="right", padx=(0, 8))
+        self.bind("<Configure>", self.on_resize)
         ctk.CTkLabel(self, text="Hashtags are ordered broad → niche (an AI estimate). You can edit any text, then copy. All texts are also saved in posts.txt.",
                      text_color=MUTED, anchor="w", font=ctk.CTkFont(size=11), wraplength=980, justify="left").pack(fill="x", pady=(0, 8))
         self.body = ctk.CTkScrollableFrame(self, fg_color="transparent", scrollbar_button_color=BORDER,
@@ -102,8 +112,22 @@ class ClipsPanel(ctk.CTkFrame):
         self.refresh([])
 
     def relabel(self):
+        names = [self.T("List"), self.T("Gallery")]
+        self.view_btn.configure(values=names)
+        self.view_btn.set(names[self.mode.get() == "gallery"])
         self.add_btn.configure(text=self.T("+  Add finished clip"))
         self.title_lbl.configure(text=f"{self.T('Clips')} ({len(self.items)})")
+
+    def set_mode(self, choice):
+        self.mode.set("gallery" if choice == self.T("Gallery") else "list")
+        self.refresh(self.items)
+
+    def on_resize(self, _e):
+        """Gallery: more or fewer columns when the window size changes (after a short pause)."""
+        if self.mode.get() == "gallery" and gui_gallery.cols_for(self) != self._cols:
+            if self._job:
+                self.after_cancel(self._job)
+            self._job = self.after(250, lambda: self.refresh(self.items))
 
     def collect(self):
         """Move the texts typed into the cards into their items (kept when the cards are rebuilt or saved)."""
@@ -121,8 +145,13 @@ class ClipsPanel(ctk.CTkFrame):
         self.items, self.states = items, []
         for w in self.body.winfo_children():
             w.destroy()
-        for i, it in enumerate(shown, 1):
-            self.card(self.body, i, it)
+        if self.mode.get() == "gallery":
+            for c in range(12):  # forget the column setup of an earlier layout
+                self.body.grid_columnconfigure(c, weight=0, uniform="")
+            gui_gallery.build(self, shown)
+        else:
+            for i, it in enumerate(shown, 1):
+                self.card(self.body, i, it)
         if not shown:
             msg = ("No favorites yet. Click ☆ Favorite on a clip." if items else
                    "No clips yet. Click '+ Add finished clip' to analyze a clip you already have "
@@ -237,8 +266,8 @@ class ClipsPanel(ctk.CTkFrame):
         xb.place(x=6, y=4)  # top-left corner: take the clip off the list
         Tip(xb, "Remove from the list (the files stay on disk)")
 
-    def thumb(self, parent, path):
-        img = thumb_image(path)
+    def thumb(self, parent, path, width=300):
+        img = thumb_image(path, width)
         if img:
             return ctk.CTkLabel(parent, text="", image=img, cursor="hand2")
         try:  # without Pillow, Tk can still show a PNG (just without the play symbol on top)
@@ -251,13 +280,14 @@ class ClipsPanel(ctk.CTkFrame):
 
     def remove(self, it):
         """The cross in the corner: remove from the list only, never touches files."""
+        gui_gallery.close_details(self, it)
         self.items.remove(it)
         self.app.save_items()
         self.refresh(self.items)
 
-    def toggle_fav(self, it, btn):
+    def toggle_fav(self, it, btn, gallery=False):
         it["favorite"] = not it.get("favorite")
-        btn.configure(text=self.T("★ Favorite" if it["favorite"] else "☆ Favorite"))
+        btn.configure(text=("★" if it["favorite"] else "☆") if gallery else self.T("★ Favorite" if it["favorite"] else "☆ Favorite"))
         self.app.save_items()
 
     def delete(self, it):
@@ -275,6 +305,7 @@ class ClipsPanel(ctk.CTkFrame):
                         os.remove(p)
                 except OSError as e:
                     messagebox.showerror(T("Delete clip"), str(e))
+        gui_gallery.close_details(self, it)
         self.items.remove(it)
         self.app.save_items()
         self.refresh(self.items)
@@ -298,14 +329,11 @@ class ClipsPanel(ctk.CTkFrame):
         self.after(1200, lambda: btn.winfo_exists() and btn.configure(text=old))
 
     def copy_all(self):
-        self.copy("\n\n\n".join(s.post("General") for s in self.states), self.all_btn)
+        if self.mode.get() == "gallery":  # no editable cards in this view: use the saved texts
+            shown = [it for it in self.items if it.get("favorite") or not self.fav_only.get()]
+            self.copy("\n\n\n".join(gui_gallery.post_text(it)[0] for it in shown), self.all_btn)
+        else:
+            self.copy("\n\n\n".join(s.post("General") for s in self.states), self.all_btn)
 
     def play(self, it):
-        p = it.get("file")
-        if p and os.path.exists(p):
-            try:
-                os.startfile(p)
-            except AttributeError:
-                webbrowser.open("file://" + p)
-        else:
-            messagebox.showinfo(self.T("No clip file"), self.T("This clip was not cut (the option 'Cut video clips' was off)."))
+        open_player(self, it, self.T)

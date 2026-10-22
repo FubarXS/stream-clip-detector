@@ -9,6 +9,11 @@ The window never does heavy work itself: it starts helper programs as separate p
 |---|---|
 | `clip_gui.py` | Main window: settings, language, clips list loading/saving |
 | `gui_layout.py` | Window layout (Analysis tab, Clips tab switch, header, bar, footer) |
+| `gui_gallery.py` | Gallery view of the Clips tab (compact cards, "Edit" opens the full card in a window) |
+| `gui_player.py` | In-app clip player: ffmpeg pictures + ffplay sound, no extra Python packages |
+| `app_main.py`, `stream_clip_detector.spec` | Entry point and PyInstaller recipe of the Windows app (`--worker <module>` = helper mode) |
+| `install.bat`, `start.bat`, `create_shortcut.ps1` | Install packages + desktop shortcut with the icon, start the program |
+| `.github/workflows/build-windows.yml` | Builds the Windows zip files when a `v*` tag is pushed |
 | `gui_clips.py` | Clips tab: cards, platform tabs, favorites, delete, copy buttons |
 | `gui_runner.py` | Starts/stops the helper processes, shows progress and status |
 | `gui_widgets.py` | Tooltip and form helpers (cards, sliders, options) |
@@ -33,6 +38,10 @@ GUI -> subprocess `clip_detector.py` (or `analyze_finished.py`) -> prints progre
 The Clips tab reads the JSON files; favorites and typed edits are written back into them.
 
 ## Conventions
+- Helper processes are started with `gui_config.worker_cmd(module, ...)` (works from source and inside the packaged .exe).
+- Clips tab: the list can come from `results.json`, `finished.json` and from scanning the folder for `clip_*` / `marker_*` files
+  (`exports.scan_folder`, texts from `*_info.txt`; favorites are stored in the info file as `Favorite: yes`).
+- Clip container is chosen with `--format mp4|mov|mkv`; `exports.cut` falls back to AAC audio when the container refuses the codec.
 - Deleting a clip in the Clips window also deletes its `_info.txt` (and the `.srt` of a finished clip).
 - A second analysis of the same recording reuses the saved transcript (`--no-transcript-cache` forces a new one).
 - Clips are cut with `-map 0:v:0 -map 0:a?` so every audio track of the recording (OBS multitrack) stays in the clip.
@@ -48,6 +57,8 @@ Use `xvfb-run` on Linux for the window; a small fake Ollama HTTP server for the 
 with a function returning fake segments (Whisper models are not needed to test the flow).
 
 ## Known limits
+- The packaged Windows app is built by GitHub Actions and was only tested on Linux (build, helper mode, window start); the sound
+  of the in-app player needs ffplay (bundled in the Windows zip; for a source install it comes with the ffmpeg download).
 - Each stream analysis rewrites `results.json` in its output folder (use a folder per stream).
 - Hashtag recommendations are an AI estimate shaped by third-party guides; no live trend data.
 - Not tested on macOS/Linux; the window is developed for Windows.

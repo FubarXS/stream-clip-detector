@@ -10,7 +10,7 @@ except ImportError:  # the app still works, just without pictures
 
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 KOFI_URL = "https://ko-fi.com/fubarxs"
 
 BG, PANEL = "#000000", "#1a1411"
@@ -58,6 +58,9 @@ def window_icon(window):
             photo = tk.PhotoImage(file=path)
             window._icon_ref = photo
             window.after(300, lambda: window.iconphoto(True, photo))  # CTk sets its own icon after ~200 ms
+            ico = os.path.join(ICONS, "app.ico")
+            if os.name == "nt" and os.path.exists(ico):
+                window.after(320, lambda: window.iconbitmap(ico))
         except Exception:
             pass
 

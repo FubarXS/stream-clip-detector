@@ -1,11 +1,26 @@
 """Extra outputs: clip thumbnails, subtitles and posts files (title, description and hashtags ready to copy)."""
 import os
+import re
 import subprocess
+
+VIDEO_EXT = (".mp4", ".mov", ".mkv")
 
 
 def hms(t):
     t = int(t)
     return f"{t // 3600}:{t % 3600 // 60:02d}:{t % 60:02d}"
+
+
+def cut(video, start, end, out_path):
+    """Cut [start, end] without re-encoding. -map keeps the video plus ALL audio tracks (OBS multitrack 1-6).
+    If the chosen container refuses the codecs (for example Opus audio in .mov), the audio is converted to AAC."""
+    base = ["ffmpeg", "-y", "-v", "error", "-ss", str(start), "-i", video, "-t", str(end - start), "-map", "0:v:0", "-map", "0:a?"]
+    r = subprocess.run(base + ["-c", "copy", out_path], capture_output=True, text=True, errors="replace")
+    if r.returncode != 0:
+        r = subprocess.run(base + ["-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out_path], capture_output=True,
+                           text=True, errors="replace")
+    if r.returncode != 0:
+        raise subprocess.CalledProcessError(r.returncode, "ffmpeg", stderr=(r.stderr or "")[-300:])
 
 
 def make_thumb(video, t, path):
@@ -58,6 +73,8 @@ def write_info(it, path, include_transcript=True):
     rows = [f"Clip: {os.path.basename(it.get('file') or '(not cut)')}",
             f"Time: {hms(it['start'])} - {hms(it['end'])} (peak {hms(it['peak'])})", f"Score: {it['score']}",
             f"Why picked: {it['why']}"]
+    if it.get("favorite"):
+        rows.append("Favorite: yes")
     if a:
         rows.append(f"AI funny rating: {a.get('funny', 0):g}/10 - {a.get('why', '')}")
     rows += ["", f"Title: {title}", f"Description: {desc}", f"Hashtags: {tags}"]
@@ -69,6 +86,68 @@ def write_info(it, path, include_transcript=True):
             f.write("\n".join(rows) + "\n")
     except OSError as e:
         print(f"   Could not write {os.path.basename(path)}: {e}", flush=True)
+
+
+def _secs(text):
+    return sum(int(v) * 60 ** i for i, v in enumerate(reversed(text.split(":"))))
+
+
+def read_info(path, clip_path):
+    """Rebuilds a clip item from its *_info.txt (the format of write_info). None if the file cannot be read."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return None
+    head, _, tr = text.partition("\nTranscript:\n")
+    one = lambda name: (re.search(rf"^{name}: (.*)$", head, re.M) or [None, ""])[1].strip()
+    block = lambda name, nxt: ((re.search(rf"^{name}: (.*?)(?=^{nxt}:|\Z)", head, re.S | re.M) or [None, ""])[1]).strip()
+    t = re.search(r"(\d+:\d\d:\d\d) - (\d+:\d\d:\d\d)(?: \(peak (\d+:\d\d:\d\d)\))?", one("Time"))
+    start, end = (_secs(t[1]), _secs(t[2])) if t else (0, 0)
+    peak = _secs(t[3]) if t and t[3] else start
+    title, desc, tags = block("Title", "Description"), block("Description", "Hashtags"), block("Hashtags", "Transcript")
+    name = os.path.basename(clip_path)
+    stem = os.path.splitext(name)[0]
+    thumb = os.path.join(os.path.dirname(clip_path), "thumbs", stem + ".png")
+    lines = tr.strip()
+    it = {"kind": "marker" if name.startswith("marker_") else "clip", "file": clip_path, "start": start, "end": end,
+          "peak": peak, "score": float(one("Score") or 0) if re.match(r"^[\d.]+$", one("Score")) else 0,
+          "why": one("Why picked"), "lines": lines, "links": [], "hint": "", "ai": None,
+          "text": " ".join(re.sub(r"^\[[\d:]+\] ", "", ln) for ln in lines.splitlines()),
+          "thumb": thumb if os.path.exists(thumb) else "", "favorite": one("Favorite") == "yes",
+          "edits": {"General": {"title": title, "description": desc, "hashtags": tags}}}
+    m = re.match(r"([\d.]+)/10 - (.*)", one("AI funny rating"))
+    if m:
+        it["ai"] = {"funny": float(m[1]), "why": m[2], "title": title, "description": desc, "hashtags": tags.split(),
+                    "moment": None, "evidence": "", "evidence_ok": True, "meme_terms": []}
+    return it
+
+
+def scan_folder(out, known):
+    """Clips in the output folder (clip_01_... / marker_01_... videos) that no results file mentions,
+    with the texts from their *_info.txt. 'known' = file paths already loaded from results.json / finished.json."""
+    try:
+        names = sorted(os.listdir(out))
+    except OSError:
+        return []
+    seen = {os.path.normcase(os.path.abspath(k)) for k in known if k}
+    found = []
+    for n in names:
+        stem, ext = os.path.splitext(n)
+        m = re.match(r"(?:clip|marker)_\d+_(\d+)-(\d\d)-(\d\d)$", stem)
+        path = os.path.join(out, n)
+        if ext.lower() not in VIDEO_EXT or not m or os.path.normcase(os.path.abspath(path)) in seen:
+            continue
+        it = read_info(os.path.join(out, stem + "_info.txt"), path)
+        if not it:  # no info file: the clip name still tells the time of the peak
+            peak = _secs(":".join(m.groups()))
+            thumb = os.path.join(out, "thumbs", stem + ".png")
+            it = {"kind": "marker" if n.startswith("marker_") else "clip", "file": path, "start": peak, "end": peak,
+                  "peak": peak, "score": 0, "why": "found in the folder (no info file)", "text": "", "lines": "",
+                  "links": [], "hint": "", "ai": None, "thumb": thumb if os.path.exists(thumb) else ""}
+        it["_src"] = "folder"
+        found.append(it)
+    return found
 
 
 def sync_info(it, out):

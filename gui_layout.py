@@ -6,7 +6,7 @@ import customtkinter as ctk
 from brand import (BG, PANEL_BORDER, BORDER, BORDER_H, TEXT, MUTED, DIM, ACCENT, RADIUS_LG, KOFI_URL, VERSION,
                    BTN2, OPTION, COMBO, ENTRY, BOX, SEG, TABS, SWITCH, SLIDER, BrandButton, image, window_icon)
 from gui_clips import ClipsPanel
-from gui_config import MODELS, LANGS, DEVICES
+from gui_config import MODELS, LANGS, DEVICES, FORMATS
 import ollama_models
 
 
@@ -87,9 +87,9 @@ class LayoutMixin:
                      text_color=MUTED).pack(anchor="w", pady=(2, 0))
         self.view_name = "Analysis"
         self.view_seg = ctk.CTkSegmentedButton(head, values=[self.tr("Analysis"), self.tr("Clips")], command=self.show_view,
-                                               height=34, **SEG)
+                                               height=46, font=ctk.CTkFont(size=15, weight="bold"), **SEG)
         self.view_seg.set(self.tr("Analysis"))
-        self.view_seg.pack(anchor="w", pady=(10, 0))
+        self.view_seg.pack(fill="x", pady=(12, 0))  # full-width tab bar
         ctk.CTkOptionMenu(head, values=["English", "Čeština"], variable=self.ui_lang_var, width=110,
                           command=self.set_lang, **OPTION).place(relx=1.0, rely=0.0, anchor="ne")
         ctk.CTkButton(head, text="↺ Reset all", width=100, height=28, command=self.reset_all,
@@ -109,6 +109,10 @@ class LayoutMixin:
         self.slider(sel, "Seconds before peak", "before", 5, 60, 1, "How much lead-up is included in each clip.", " s")
         self.slider(sel, "Seconds after peak", "after", 5, 60, 1, "How much is included after the moment.", " s")
         self.slider(sel, "Min. gap between clips", "gap", 20, 300, 5, "Prevents several clips of the same moment.", " s")
+        self.option(sel, "Clip file format",
+                    "MP4 plays everywhere. If DaVinci Resolve does not show all audio tracks of an MP4 clip (OBS multitrack), "
+                    "choose MOV. MKV is the format OBS records in (not supported by the free DaVinci Resolve). All audio tracks "
+                    "of the recording are kept in every format.", self.fmt_name, FORMATS)
         ctk.CTkSwitch(sel, text="Cut video clips (off = timestamps only)", variable=self.vars["cut"],
                       **SWITCH).pack(anchor="w", padx=16, pady=(10, 0))
         ctk.CTkSwitch(sel, text="Save an info file next to each clip", variable=self.vars["save_info"],

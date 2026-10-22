@@ -21,7 +21,7 @@ except ImportError:
 
 import exports
 from brand import ACCENT
-from gui_config import CFG, DEFAULTS, DEVICES, HERE, LANGS, MODELS, NUM
+from gui_config import CFG, DEFAULTS, DEVICES, FORMATS, HERE, LANGS, MODELS, NUM
 from gui_layout import LayoutMixin
 from gui_widgets import Blocks, Tip
 from gui_strings import CS, tr as tr_text
@@ -49,7 +49,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         except Exception:
             pass
         V = self.vars = {}
-        for k in ("video", "url", "out", "secret", "llm_model", "game", "extra_tags", "audio_track"):
+        for k in ("video", "url", "out", "secret", "llm_model", "game", "extra_tags", "audio_track", "clips_view"):
             V[k] = tk.StringVar(value=str(cfg[k]))
         for k in NUM:
             try:
@@ -61,6 +61,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         pick = lambda d, v, default: next((n for n, c in d.items() if c == v), default)
         self.model_name = tk.StringVar(value=pick(MODELS, cfg["model"], "Balanced"))
         self.lang_name = tk.StringVar(value=pick(LANGS, cfg["lang"], "English"))
+        self.fmt_name = tk.StringVar(value=pick(FORMATS, cfg["clip_format"], "MP4"))
         self.dev_name = tk.StringVar(value=pick(DEVICES, cfg["device"], "Auto (GPU if available)"))
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.lang = cfg["ui_lang"]
@@ -81,6 +82,14 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         p = filedialog.askopenfilename(filetypes=[("Video", "*.mp4 *.mkv *.flv *.mov *.ts"), ("All", "*.*")])
         if p:
             self.vars["video"].set(p)
+
+    def pick_clips_folder(self):
+        """Clips tab: load the clips (with their info files) of any folder."""
+        p = filedialog.askdirectory(initialdir=self.vars["out"].get() or None)
+        if p:
+            self.save_items()  # the folder we are leaving
+            self.vars["out"].set(p)
+            self.load_clips()
 
     def pick_out(self):
         p = filedialog.askdirectory()
@@ -105,7 +114,8 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
             "model": MODELS[self.model_name.get()], "lang": LANGS[self.lang_name.get()],
             "device": DEVICES[self.dev_name.get()], "whisper": v["whisper"].get(), "cut": v["cut"].get(),
             "save_transcript": v["save_transcript"].get(), "save_info": v["save_info"].get(),
-            "reuse_transcript": v["reuse_transcript"].get(),
+            "reuse_transcript": v["reuse_transcript"].get(), "clip_format": FORMATS[self.fmt_name.get()],
+            "clips_view": v["clips_view"].get(),
             "secret": v["secret"].get().strip(), "secret_back": i("secret_back"),
             "audio_track": v["audio_track"].get(), "tag_pool": i("tag_pool"),
             "ui_lang": self.lang, "game": v["game"].get().strip(), "extra_tags": v["extra_tags"].get().strip(),
@@ -176,6 +186,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         self.model_name.set(first(MODELS, DEFAULTS["model"]))
         self.lang_name.set(first(LANGS, DEFAULTS["lang"]))
         self.dev_name.set(first(DEVICES, DEFAULTS["device"]))
+        self.fmt_name.set(first(FORMATS, DEFAULTS["clip_format"]))
         for u in self.updaters:
             u()
 
@@ -236,14 +247,16 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
                 with open(os.path.join(out, name), encoding="utf-8") as f:
                     for d in json.load(f):
                         d["_src"] = name
-                        prev = old.get((name, d.get("file"), d.get("start")))
-                        if prev:
-                            d["favorite"] = prev.get("favorite", d.get("favorite"))
-                            if prev.get("edits"):
-                                d["edits"] = prev["edits"]
                         items.append(d)
             except Exception:
                 pass
+        items += exports.scan_folder(out, [d.get("file") for d in items])  # clips (and their info files) in the folder
+        for d in items:
+            prev = old.get((d["_src"], d.get("file"), d.get("start")))
+            if prev:
+                d["favorite"] = prev.get("favorite", d.get("favorite"))
+                if prev.get("edits"):
+                    d["edits"] = prev["edits"]
         self.clips_dirty = False
         if switch and quiet and not items:  # a run that found nothing: stay where we are
             return
@@ -268,7 +281,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
                 except OSError:
                     pass
         for it in self.clips_panel.items:  # keep the *_info.txt files in step with the edited texts
-            if it.get("edits") and it.get("file"):
+            if (it.get("edits") or it.get("favorite")) and it.get("file"):
                 exports.sync_info(it, self.clips_dir)
 
     def show_clips(self, quiet=False):
@@ -281,7 +294,13 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         self.destroy()
 
 
-if __name__ == "__main__":
+def main():
+    if os.name == "nt":  # own taskbar entry and icon instead of the "Python" one
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("FubarXS.StreamClipDetector")
+        except Exception:
+            pass
     try:
         App().mainloop()
     except Exception:
@@ -289,3 +308,7 @@ if __name__ == "__main__":
         with open(os.path.join(HERE, "crash_log.txt"), "w", encoding="utf-8") as f:
             f.write(err)
         messagebox.showerror("Stream Clip Detector crashed", err[-1500:] + "\n\n(Also saved to crash_log.txt)")
+
+
+if __name__ == "__main__":
+    main()

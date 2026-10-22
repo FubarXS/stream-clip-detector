@@ -10,13 +10,18 @@ It does **not** depend on chat: it listens to loudness and to what you say. Ever
 - **Optional AI helper** (free, local, via [Ollama](https://ollama.com)): rates how funny a clip is, writes a title and caption, and suggests hashtags and meme ideas for TikTok, YouTube Shorts and Instagram Reels.
 - **Finished clips**: add a clip you already edited (for example exported from DaVinci Resolve) and get the same texts for it.
 - Saves an `_info.txt` next to every clip (title, hashtags, transcript); transcript files can be switched off. All audio tracks of an OBS recording are kept in the clips.
-- Mark favorites, remove clips, edit the texts and copy them. Czech and English interface.
+- **Clips tab**: list or gallery view, play a clip right in the app (small player, no extra install), mark favorites, edit the texts
+  and copy them, load the clips of any folder (they come back with their `_info.txt` texts). Czech and English interface.
+- Clip format: MP4, MOV (DaVinci Resolve with several audio tracks) or MKV.
 
 ## Install (Windows)
 1. Install [Python 3.10 or newer](https://www.python.org/downloads/) - tick **Add python.exe to PATH**.
 2. Install ffmpeg: open PowerShell and run `winget install Gyan.FFmpeg`, then open a new PowerShell window.
 3. Double-click `install.bat` (installs the Python packages).
-4. Double-click `spustit.bat` to start the program.
+4. Start the program with the **Stream Clip Detector** icon that `install.bat` puts on your desktop (or double-click `start.bat`).
+
+**No Python?** Download the zip for Windows from the [Releases](../../releases) page (`...-cpu.zip`, or `...-gpu.zip` for NVIDIA
+graphics cards - much larger), unzip it and start `StreamClipDetector.exe`. ffmpeg is included.
 
 Optional: install [Ollama](https://ollama.com) and run `ollama pull <model>` for the AI helper. NVIDIA graphics cards make the
 speech recognition much faster (see `requirements.txt`); without one, choose **CPU** in the program.

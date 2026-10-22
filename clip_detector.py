@@ -232,13 +232,6 @@ def snippet(segments, t):
     return " ".join(texts)[:150]
 
 
-def cut(video, start, end, out_path):
-    # -map 0:v:0 -map 0:a? = the video + ALL audio tracks (OBS multitrack 1-6 stay separate in the clip).
-    # Without -map ffmpeg would keep just one audio track.
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", str(start), "-i", video,
-                    "-t", str(end - start), "-map", "0:v:0", "-map", "0:a?", "-c", "copy", out_path], check=True)
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("video")
@@ -268,6 +261,7 @@ def main():
     ap.add_argument("--no-transcript-cache", action="store_true",
                     help="always transcribe again, even if a saved transcript of this recording exists")
     ap.add_argument("--no-info-files", action="store_true", help="no *_info.txt file next to each clip")
+    ap.add_argument("--format", default="mp4", choices=["mp4", "mov", "mkv"], help="container of the cut clips")
     ap.add_argument("--no-cut", action="store_true", help="timestamps only, no cutting")
     ap.add_argument("--out", default="clips")
     args = ap.parse_args()
@@ -348,13 +342,13 @@ def main():
     import exports
     lines = []
     for i, it in enumerate(items, 1):
-        name = f"{'marker' if it['kind'] == 'marker' else 'clip'}_{i:02d}_{fmt(it['peak']).replace(':', '-')}.mp4"
+        name = f"{'marker' if it['kind'] == 'marker' else 'clip'}_{i:02d}_{fmt(it['peak']).replace(':', '-')}.{args.format}"
         if not args.no_cut:
             it["file"] = os.path.join(args.out, name)
-            cut(args.video, it["start"], it["end"], it["file"])
+            exports.cut(args.video, it["start"], it["end"], it["file"])
             if not args.no_info_files:
                 exports.write_info(it, exports.info_path(it, args.out), not args.no_transcript_files)
-        it["thumb"] = exports.make_thumb(args.video, it["peak"], os.path.join(args.out, "thumbs", name[:-4] + ".png"))
+        it["thumb"] = exports.make_thumb(args.video, it["peak"], os.path.join(args.out, "thumbs", os.path.splitext(name)[0] + ".png"))
         tag = "MARKER" if it["kind"] == "marker" else "clip"
         block = [f"#{i:02d} [{tag}]  {fmt(it['start'])} - {fmt(it['end'])}  score {it['score']}", f"    why: {it['why']}"]
         a = it["ai"]

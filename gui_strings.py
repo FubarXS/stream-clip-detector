@@ -95,6 +95,15 @@ CS.update({
     "Save an info file next to each clip": "Uložit ke každému klipu info soubor",
     "Save transcript files (.txt, .srt)": "Ukládat soubory s přepisem (.txt, .srt)",
     "Reuse the saved transcript of this video": "Použít uložený přepis tohoto videa",
+    "Clip file format": "Formát souboru klipů",
+    "MP4 plays everywhere. If DaVinci Resolve does not show all audio tracks of an MP4 clip (OBS multitrack), choose MOV. "
+    "MKV is the format OBS records in (not supported by the free DaVinci Resolve). All audio tracks of the recording are kept in every format.":
+        "MP4 se přehraje všude. Pokud DaVinci Resolve u MP4 klipu neukáže všechny audio stopy (multistopáž z OBS), vyber MOV. "
+        "MKV je formát, ve kterém nahrává OBS (free verze DaVinci Resolve ho nepodporuje). Všechny audio stopy záznamu zůstanou zachované v každém formátu.",
+    "List": "Seznam", "Gallery": "Galerie", "Load folder...": "Načíst složku...",
+    "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)",
+    "Open in system player": "Otevřít v systémovém přehrávači",
+    "No sound: ffplay (part of the ffmpeg download) was not found.": "Bez zvuku: nenalezen ffplay (je součástí stažení ffmpeg).",
 })
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 

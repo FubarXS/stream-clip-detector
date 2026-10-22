@@ -25,3 +25,8 @@ finished.json
 # Editors / system
 .vscode/
 Thumbs.db
+
+# Packaged app (built by PyInstaller)
+build/
+dist/
+*.zip

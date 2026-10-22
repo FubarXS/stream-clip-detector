@@ -11,7 +11,7 @@ from tkinter import filedialog, messagebox
 
 from gui_dialogs import ask_text
 
-from gui_config import PY, NOWIN, LOWPRI, HERE
+from gui_config import NOWIN, LOWPRI, HERE, worker_cmd
 
 
 VIDEO_EXT = (".mp4", ".mkv", ".ts", ".flv", ".mov")
@@ -87,7 +87,7 @@ class RunnerMixin:
     def worker(self, cfg, measure=False, finished=None):
         try:
             if finished:
-                self.exec([PY, "-u", os.path.join(HERE, "analyze_finished.py"), *finished, "--model", cfg["model"],
+                self.exec([*worker_cmd("analyze_finished"), *finished, "--model", cfg["model"],
                            "--lang", cfg["lang"], "--device", cfg["device"], "--llm", cfg["llm_model"],
                            "--game", cfg["game"], "--extra-tags", cfg["extra_tags"], "--tag-pool", cfg["tag_pool"],
                            "--out", cfg["out"], *self.save_flags(cfg)])
@@ -103,7 +103,7 @@ class RunnerMixin:
                     self.q.put(("log", f"VOD already downloaded - using {os.path.basename(video)}\n"))
                 else:
                     self.q.put(("log", "Downloading VOD...\n"))
-                    rc = self.exec([PY, "-m", "yt_dlp", "--newline", "--no-warnings", "-N", "4", "-o",
+                    rc = self.exec([*worker_cmd("yt_dlp"), "--newline", "--no-warnings", "-N", "4", "-o",
                                     os.path.join(dl, "%(id)s.%(ext)s"), "--progress-template",
                                     "download:@@Downloading VOD %(progress._percent_str)s  %(progress._speed_str)s  "
                                     "ETA %(progress._eta_str)s", cfg["url"]])
@@ -113,14 +113,14 @@ class RunnerMixin:
                         return
                     video = max(files, key=os.path.getmtime)
             if measure:
-                self.exec([PY, "-u", os.path.join(HERE, "clip_detector.py"), video, "--measure", "--loud-db", cfg["loud_db"],
+                self.exec([*worker_cmd("clip_detector"), video, "--measure", "--loud-db", cfg["loud_db"],
                            "--audio-track", cfg["audio_track"]])
                 return
             conf = os.path.join(HERE, "run_config.json")
             kd = lambda t: [k.strip().lower() for k in t.splitlines() if k.strip()]
             with open(conf, "w", encoding="utf-8") as f:
                 json.dump({"keywords": kd(cfg["kw_en"]) + kd(cfg["kw_cs"]), "strong": kd(cfg["kw_strong"])}, f)
-            cmd = [PY, "-u", os.path.join(HERE, "clip_detector.py"), video, "--top", cfg["top"],
+            cmd = [*worker_cmd("clip_detector"), video, "--top", cfg["top"],
                    "--before", cfg["before"], "--after", cfg["after"], "--min-gap", cfg["gap"],
                    "--threshold", cfg["threshold"], "--model", cfg["model"], "--lang", cfg["lang"],
                    "--device", cfg["device"], "--loud-db", cfg["loud_db"], "--audio-track", cfg["audio_track"], "--config", conf, "--out", cfg["out"]]
@@ -138,6 +138,7 @@ class RunnerMixin:
                 cmd.append("--no-whisper")
             if not cfg["cut"]:
                 cmd.append("--no-cut")
+            cmd += ["--format", cfg["clip_format"]]
             cmd += self.save_flags(cfg)
             if self.exec(cmd) != 0 and not self.cancel:
                 self.q.put(("log", "\nThe analysis stopped with an error (see above).\n"))
