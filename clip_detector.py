@@ -321,7 +321,14 @@ def main():
              for k, p, st, en in jobs]
     if use_ai and items:
         import llm_judge
-        if llm_judge.judge_all(args.llm, items, game=args.game, extra_tags=args.extra_tags, pool=args.tag_pool):
+        judge_ok = llm_judge.judge_all(args.llm, items, game=args.game, extra_tags=args.extra_tags, pool=args.tag_pool)
+        failed = sum(1 for it in items if it["kind"] != "marker" and not it["ai"])
+        if judge_ok and failed:
+            print(f"   The AI wrote no usable texts for {failed} of {len(items)} clips (reasons above).", flush=True)
+        if judge_ok and not any(it["ai"] for it in items if it["kind"] != "marker"):
+            print("   No clip got AI texts - keeping the clips without them instead of dropping all.", flush=True)
+            judge_ok = False
+        if judge_ok:
             ranked = sorted([it for it in items if it["kind"] != "marker" and it["ai"]], key=lambda it: -it["ai"]["funny"])
             good = [it for it in ranked if it["ai"]["funny"] >= args.min_funny]
             if not good:

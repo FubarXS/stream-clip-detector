@@ -7,7 +7,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import llm_parse as parse
+
 URL = "http://localhost:11434/api/chat"
+# Without num_ctx an old Ollama uses a 2048-token window and silently cuts off the START of the prompt (the
+# instructions), without num_predict a model that loops on hashtags writes until the window is full and the JSON is cut.
+OPTIONS = {"temperature": 0.3, "num_ctx": 4096, "num_predict": 1500}
 MEMES = ("to be continued (JoJo), vine boom, bruh sound effect, this is fine dog, surprised pikachu, sad violin, "
          "GTA wasted, mission failed we'll get 'em next time, nope (leaving the room), oh no no no, "
          "Michael Scott no god please no, Homer disappearing into bushes, awkward look, skeleton waiting, "
@@ -64,20 +69,35 @@ def _evidence_ok(ev, text):
 
 
 def ask(model, transcript, hint, plain, url=URL, timeout=300, game="", pool=20):
+    """One clip -> rating + texts. An unusable answer gets one more try that asks for fewer hashtags
+    (a long list is what makes small models loop); then ValueError says what the model sent."""
+    err = ValueError("no answer")
+    for n in dict.fromkeys((pool, min(pool, 20))):
+        try:
+            return _ask_once(model, transcript, hint, plain, url, timeout, game, n)
+        except ValueError as e:  # includes json.JSONDecodeError
+            err = e
+    raise err
+
+
+def _ask_once(model, transcript, hint, plain, url, timeout, game, pool):
     body = json.dumps({
-        "model": model, "stream": False, "format": "json", "options": {"temperature": 0.3},
+        "model": model, "stream": False, "format": "json", "options": OPTIONS,
         "messages": [{"role": "system", "content": PROMPT.replace("15-20 hashtags", f"{pool} hashtags")},
                      {"role": "user", "content": f"Game being played: {game or 'unknown'}\nAudio signals: {hint}\nTranscript:\n{transcript[:3500]}"}],
     }).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        data = json.loads(json.loads(r.read())["message"]["content"])
-    tags = clean_tags(data.get("hashtags", []), pool)
-    ev = str(data.get("evidence", ""))[:160]
-    return {"funny": float(data.get("funny", 0)), "why": str(data.get("why", ""))[:300],
+        raw = json.loads(r.read())["message"]["content"]
+    data = parse.load_reply(raw) or parse.salvage(raw)  # a cut-off reply still gives the fields that were finished
+    if not (data.get("title") or data.get("description") or data.get("hashtags")):
+        raise ValueError("the AI reply has no title/description/hashtags: " + " ".join(str(raw).split())[:100])
+    ev = parse.to_text(data.get("evidence"), 160)
+    return {"funny": parse.to_float(data.get("funny")), "why": parse.to_text(data.get("why"), 300),
             "moment": _secs(data.get("moment")), "evidence": ev, "evidence_ok": _evidence_ok(ev, plain),
-            "title": str(data.get("title", ""))[:100], "description": str(data.get("description", ""))[:400], "hashtags": tags,
-            "meme_terms": [str(x) for x in data.get("meme_terms", [])][:3]}
+            "title": parse.to_text(data.get("title"), 100), "description": parse.to_text(data.get("description"), 400),
+            "hashtags": clean_tags(parse.to_list(data.get("hashtags")), pool),
+            "meme_terms": parse.to_list(data.get("meme_terms"), words=False)[:3]}
 
 
 def _judge_loop(model, items, url=URL, game="", extra_tags="", pool=20):
@@ -97,7 +117,7 @@ def _judge_loop(model, items, url=URL, game="", extra_tags="", pool=20):
                   "AI step skipped.", flush=True)
             return False
         except Exception as e:
-            print(f"   AI answer for clip {i} could not be used ({type(e).__name__}).", flush=True)
+            print(f"   AI answer for clip {i} could not be used ({type(e).__name__}: {str(e)[:160]}).", flush=True)
     return True
 
 
@@ -128,11 +148,11 @@ def links(terms):
 
 
 def _chat(model, system, user, url=URL, timeout=300):
-    body = json.dumps({"model": model, "stream": False, "format": "json", "options": {"temperature": 0.3},
+    body = json.dumps({"model": model, "stream": False, "format": "json", "options": OPTIONS,
                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(json.loads(r.read())["message"]["content"])
+        return parse.load_reply(json.loads(r.read())["message"]["content"])
 
 
 def adapt_all(model, items, game="", extra_tags="", url=URL):

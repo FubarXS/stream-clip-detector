@@ -264,7 +264,9 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
             prev = old.get((d["_src"], d.get("file"), d.get("start")))
             if prev:
                 d["favorite"] = prev.get("favorite", d.get("favorite"))
-                if prev.get("edits"):
+                # Edits belong to the AI texts they were made on. A new analysis of the same clip (same name and
+                # start) brings new AI texts - old edits, often just the empty texts of a run without AI, would hide them.
+                if prev.get("edits") and prev.get("ai") == d.get("ai"):
                     d["edits"] = prev["edits"]
         self.clips_dirty = False
         if switch and quiet and not items:  # a run that found nothing: stay where we are

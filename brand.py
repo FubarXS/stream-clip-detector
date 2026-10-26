@@ -10,7 +10,7 @@ except ImportError:  # the app still works, just without pictures
 
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 KOFI_URL = "https://ko-fi.com/fubarxs"
 
 BG, PANEL = "#000000", "#1a1411"

@@ -27,6 +27,7 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `keywords.py` | Default trigger words (kept tiny so the window does not import numpy) |
 | `calibrate.py` | Loudness check ("Measure my loudness") |
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
+| `llm_parse.py` | Tolerant reading of the AI reply (JSON in a fence, "8/10", hashtags as one string, cut-off answers) |
 | `platforms.py` | Per-platform rules (hashtag counts, title length) and text building |
 | `analyze_finished.py` | Analysis of already finished clips |
 | `transcript_cache.py` | Saves/reuses the Whisper transcript per recording in `<out>/cache/` |

@@ -17,12 +17,15 @@ def load(out, video, extra):
     try:
         with open(_path(out, video, extra), encoding="utf-8") as f:
             data = json.load(f)
-        return [(s[0], s[1], s[2], [tuple(w) for w in s[3]]) for s in data["segments"]]
+        segs = [(s[0], s[1], s[2], [tuple(w) for w in s[3]]) for s in data["segments"]]
+        return segs or None  # an empty transcript is a failed run, not a result: transcribe again
     except (OSError, ValueError, KeyError, IndexError, TypeError):
         return None
 
 
 def save(out, video, extra, segments):
+    if not segments:
+        return
     try:
         path = _path(out, video, extra)
         os.makedirs(os.path.dirname(path), exist_ok=True)
