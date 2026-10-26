@@ -8,6 +8,7 @@ from brand import (BG, PANEL_BORDER, BORDER, BORDER_H, TEXT, MUTED, DIM, ACCENT,
 from gui_clips import ClipsPanel
 from gui_config import MODELS, LANGS, DEVICES, FORMATS
 import ollama_models
+from gui_widgets import FitButton, Tip
 
 
 class LayoutMixin:
@@ -92,15 +93,23 @@ class LayoutMixin:
         self.view_seg.pack(fill="x", pady=(12, 0))  # full-width tab bar
         ctk.CTkOptionMenu(head, values=["English", "Čeština"], variable=self.ui_lang_var, width=110,
                           command=self.set_lang, **OPTION).place(relx=1.0, rely=0.0, anchor="ne")
-        ctk.CTkButton(head, text="↺ Reset all", width=100, height=28, command=self.reset_all,
+        FitButton(head, text="↺ Reset all", width=100, height=28, command=self.reset_all,
                       **BTN2).place(relx=1.0, x=-122, rely=0.0, anchor="ne")
 
     def build_left(self, left):
         src = self.card(left, "Source & output")
-        self.entry(src, "Recording (video file)", "video", self.pick_video, "A recording of your stream (.mp4, .mkv, ...).")
+        self.entry(src, "Recording (video file)", "video", self.pick_video, "A recording of your stream (.mp4, .mkv, ...).",
+                   clear=True)
         self.entry(src, "...or Twitch VOD link", "url", None,
-                   "Paste a VOD link and it will be downloaded first. Only use content you have the rights to.")
+                   "Paste a VOD link and it will be downloaded first. Only use content you have the rights to.", clear=True)
+        self.source_hint = ctk.CTkLabel(src, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
+                                        wraplength=380, anchor="w")
+        self.source_hint.pack(anchor="w", padx=16)
         self.entry(src, "Save clips to", "out", self.pick_out, "Folder where the clips and clips.txt are saved.")
+        self.beside_sw = ctk.CTkSwitch(src, text="Save clips next to the recording", variable=self.vars["out_beside"], **SWITCH)
+        self.beside_sw.pack(anchor="w", padx=16, pady=(6, 14))
+        Tip(self.beside_sw, "The clips go into a new folder named after the video (for example 'stream_clips'), right next to "
+                            "it - one folder per recording, so several streams never mix. Not used with a Twitch link.")
 
         sel = self.card(left, "Clip selection")
         self.slider(sel, "Max clips", "top", 3, 50, 1, "The N best moments are kept.")
@@ -139,9 +148,9 @@ class LayoutMixin:
                  "that contains some of your yelps. Takes a minute or two for a long video.")
         btns = ctk.CTkFrame(sig, fg_color="transparent")
         btns.pack(fill="x", padx=16, pady=(2, 2))
-        self.measure_btn = ctk.CTkButton(btns, text="Measure", width=110, height=30, command=self.measure, **BTN2)
+        self.measure_btn = FitButton(btns, text="Measure", width=110, height=30, command=self.measure, **BTN2)
         self.measure_btn.pack(side="left")
-        self.apply_btn = ctk.CTkButton(btns, text="Use suggestion", width=130, height=30, state="disabled",
+        self.apply_btn = FitButton(btns, text="Use suggestion", width=130, height=30, state="disabled",
                                        command=self.use_suggestion, **BTN2)
         self.apply_btn.pack(side="left", padx=(8, 0))
         self.measure_lbl = ctk.CTkLabel(sig, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
@@ -176,7 +185,7 @@ class LayoutMixin:
         self.model_combo = ctk.CTkComboBox(mrow, variable=self.vars["llm_model"], height=32,
                                            values=[self.vars["llm_model"].get() or "gemma3:12b"], **COMBO)
         self.model_combo.pack(side="left", fill="x", expand=True)
-        ctk.CTkButton(mrow, text="Refresh", width=80, height=32, command=self.refresh_models, **BTN2).pack(side="left", padx=(8, 0))
+        FitButton(mrow, text="Refresh", width=80, height=32, command=self.refresh_models, **BTN2).pack(side="left", padx=(8, 0))
         self.models_lbl = ctk.CTkLabel(ai, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
                                        wraplength=380, anchor="w")
         self.models_lbl.pack(anchor="w", padx=16, pady=(2, 4))
@@ -239,9 +248,9 @@ class LayoutMixin:
         self.prog = ctk.CTkProgressBar(mid, mode="determinate", progress_color=ACCENT, fg_color=BORDER)
         self.prog.pack(fill="x", pady=(6, 0))
         self.prog.set(0)
-        self.save_btn = ctk.CTkButton(bar, text="Save", width=110, height=42, command=self.save, **BTN2)
+        self.save_btn = FitButton(bar, text="Save", width=110, height=42, command=self.save, **BTN2)
         self.save_btn.grid(row=0, column=1, padx=(0, 10))
-        ctk.CTkButton(bar, text="Open folder", width=120, height=42, command=self.open_out, **BTN2).grid(
+        FitButton(bar, text="Open folder", width=120, height=42, command=self.open_out, **BTN2).grid(
             row=0, column=2, padx=(0, 10))
         self.btn = BrandButton(bar, "▶  Start analysis", self.start)
         self.btn.grid(row=0, column=4)

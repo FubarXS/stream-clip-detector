@@ -71,7 +71,7 @@ CS = {
     "The model is the 'brain' that turns speech into text. Bigger = more accurate but slower and needs more memory (Accurate needs about 5 GB of GPU memory).":
         "Model je 'mozek', který mění řeč na text. Větší = přesnější, ale pomalejší a potřebuje víc paměti (Accurate asi 5 GB paměti grafiky).",
     "The language you mostly speak. 'Mixed' tries to detect the language of every sentence - experimental, switch back if the text looks odd.":
-        "Jazyk, kterým hlavně mluvíš. 'Mixed' hádá jazyk u každé věty - experimentální, když text vychází divně, vrať se zpět.",
+        "Jazyk, kterým hlavně mluvíš. 'Smíšený' hádá jazyk u každé věty - experimentální, když text vychází divně, vrať se zpět.",
     "GPU (NVIDIA) is much faster. If the GPU fails or you have none, choose CPU - slower but works everywhere.": "GPU (NVIDIA) je mnohem rychlejší. Když GPU selže nebo ji nemáš, zvol CPU - pomalejší, ale funguje všude.",
     "Say this phrase right after something great happens. A clip is ALWAYS created, covering the seconds before you said it. Leave empty to disable.":
         "Řekni tuto frázi hned po skvělém momentu. Klip vznikne VŽDY a pokryje vteřiny před vyslovením. Prázdné = vypnuto.",
@@ -104,6 +104,20 @@ CS.update({
     "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)",
     "Open in system player": "Otevřít v systémovém přehrávači",
     "No sound: ffplay (part of the ffmpeg download) was not found.": "Bez zvuku: nenalezen ffplay (je součástí stažení ffmpeg).",
+})
+CS.update({  # 0.5.0: dropdown lists, one-source rule, save next to the recording
+    "MKV (like OBS)": "MKV (jako OBS)", "Auto (GPU if available)": "Auto (GPU, pokud je)",
+    "Fast": "Rychlá", "Balanced": "Vyvážená", "Accurate": "Přesná",
+    "English": "Angličtina", "Czech": "Čeština", "Slovak": "Slovenština", "German": "Němčina", "Spanish": "Španělština",
+    "Polish": "Polština", "Auto-detect": "Automaticky", "Mixed (experimental)": "Smíšený (experimentální)",
+    "Clear": "Vymazat",
+    "Only one source is used. Clear the Twitch link to pick a file.": "Použije se jen jeden zdroj. Pro výběr souboru nejdřív vymaž odkaz na Twitch.",
+    "Only one source is used. Clear the recording file to use a Twitch link.": "Použije se jen jeden zdroj. Pro použití odkazu na Twitch nejdřív vymaž soubor se záznamem.",
+    "Both a file and a link are filled in. Clear one of them.": "Je vyplněný soubor i odkaz. Jeden z nich vymaž.",
+    "Two sources": "Dva zdroje",
+    "Save clips next to the recording": "Uložit klipy vedle záznamu",
+    "The clips go into a new folder named after the video (for example 'stream_clips'), right next to it - one folder per recording, so several streams never mix. Not used with a Twitch link.":
+        "Klipy se uloží do nové složky pojmenované podle videa (například 'stream_clips'), hned vedle něj - jedna složka na záznam, takže se víc streamů nepomíchá. S odkazem na Twitch se nepoužije.",
 })
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 

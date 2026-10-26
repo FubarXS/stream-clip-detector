@@ -31,7 +31,7 @@ FORMATS = {"MP4": "mp4", "MOV (DaVinci Resolve)": "mov", "MKV (like OBS)": "mkv"
 DEVICES = {"Auto (GPU if available)": "auto", "GPU (NVIDIA)": "cuda", "CPU": "cpu"}
 NUM = ("top", "before", "after", "gap", "threshold", "secret_back", "loud_db", "min_funny", "tag_pool")
 DEFAULTS = {
-    "video": "", "url": "", "out": os.path.join(HERE, "clips"),
+    "video": "", "url": "", "out": os.path.join(HERE, "clips"), "out_beside": False,
     "top": "15", "before": "20", "after": "10", "gap": "60", "threshold": "3.0", "loud_db": "6",
     "model": "medium", "lang": "en", "device": "auto", "whisper": True, "cut": True, "loud_on": True,
     "save_transcript": True, "save_info": True, "reuse_transcript": True,

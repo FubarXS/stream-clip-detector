@@ -7,7 +7,8 @@ import tkinter as tk
 from tkinter import messagebox
 
 from brand import TEXT, MUTED, ACCENT, ORANGE, BG, PANEL, BORDER, BORDER_H, CARD, ENTRY, BOX, BTN2, BTN_H, RADIUS_MD, SEG, SWITCH, BrandButton
-from gui_widgets import Tip
+from gui_widgets import Tip, FitButton
+from gui_icons import icon_button, ViewToggle
 import gui_gallery
 from gui_player import open_player
 import exports
@@ -92,17 +93,17 @@ class ClipsPanel(ctk.CTkFrame):
         self.title_lbl.pack(side="left")
         self.add_btn = BrandButton(h, "+  Add finished clip", app.add_finished, width=200, height=34)
         self.add_btn.pack(side="right")
-        self.all_btn = ctk.CTkButton(h, text="Copy all posts", width=150, height=32, command=self.copy_all, **BTN2)
+        self.all_btn = FitButton(h, text="Copy all posts", width=150, height=32, command=self.copy_all, **BTN2)
         self.all_btn.pack(side="right", padx=(0, 10))
         h2 = ctk.CTkFrame(self, fg_color="transparent")
         h2.pack(fill="x", pady=(0, 6))
-        self.view_btn = ctk.CTkSegmentedButton(h2, values=["List", "Gallery"], command=self.set_mode, height=30, width=200, **SEG)
+        self.view_btn = ViewToggle(h2, self.set_mode)  # two icons: list / gallery
         self.view_btn.pack(side="left")
         ctk.CTkSwitch(h2, text="Favorites only", variable=self.fav_only, command=lambda: self.refresh(self.items),
                       **SWITCH).pack(side="left", padx=(16, 0))
-        ctk.CTkButton(h2, text="Reload", width=90, height=30, command=app.load_clips, **BTN2).pack(side="right")
-        ctk.CTkButton(h2, text="Open folder", width=110, height=30, command=app.open_out, **BTN2).pack(side="right", padx=(0, 8))
-        ctk.CTkButton(h2, text="Load folder...", width=120, height=30, command=app.pick_clips_folder, **BTN2).pack(side="right", padx=(0, 8))
+        FitButton(h2, text="Reload", width=90, height=30, command=app.load_clips, **BTN2).pack(side="right")
+        FitButton(h2, text="Open folder", width=110, height=30, command=app.open_out, **BTN2).pack(side="right", padx=(0, 8))
+        FitButton(h2, text="Load folder...", width=120, height=30, command=app.pick_clips_folder, **BTN2).pack(side="right", padx=(0, 8))
         self.bind("<Configure>", self.on_resize)
         ctk.CTkLabel(self, text="Hashtags are ordered broad → niche (an AI estimate). You can edit any text, then copy. All texts are also saved in posts.txt.",
                      text_color=MUTED, anchor="w", font=ctk.CTkFont(size=11), wraplength=980, justify="left").pack(fill="x", pady=(0, 8))
@@ -112,14 +113,13 @@ class ClipsPanel(ctk.CTkFrame):
         self.refresh([])
 
     def relabel(self):
-        names = [self.T("List"), self.T("Gallery")]
-        self.view_btn.configure(values=names)
-        self.view_btn.set(names[self.mode.get() == "gallery"])
+        self.view_btn.relabel(self.T)
+        self.view_btn.set(self.mode.get())
         self.add_btn.configure(text=self.T("+  Add finished clip"))
         self.title_lbl.configure(text=f"{self.T('Clips')} ({len(self.items)})")
 
-    def set_mode(self, choice):
-        self.mode.set("gallery" if choice == self.T("Gallery") else "list")
+    def set_mode(self, mode):
+        self.mode.set(mode)  # "list" or "gallery"
         self.refresh(self.items)
 
     def on_resize(self, _e):
@@ -172,11 +172,13 @@ class ClipsPanel(ctk.CTkFrame):
         pic = self.thumb(left, it.get("thumb", ""))
         pic.pack()
         pic.bind("<Button-1>", lambda e: self.play(it))
-        ctk.CTkButton(left, text=T("▶  Play clip"), height=34, command=lambda: self.play(it), **BTN2).pack(fill="x", pady=(8, 0))
-        fav = ctk.CTkButton(left, text=T("★ Favorite" if it.get("favorite") else "☆ Favorite"), height=30, **BTN2)
+        FitButton(left, text=T("▶  Play clip"), height=34, command=lambda: self.play(it), **BTN2).pack(fill="x", pady=(8, 0))
+        row2 = ctk.CTkFrame(left, fg_color="transparent")
+        row2.pack(fill="x", pady=(6, 0))
+        icon_button(row2, "trash", "Delete", lambda: self.delete(it), T, height=30).pack(side="right", padx=(6, 0))
+        fav = FitButton(row2, text=T("★ Favorite" if it.get("favorite") else "☆ Favorite"), height=30, **BTN2)
         fav.configure(command=lambda: self.toggle_fav(it, fav))
-        fav.pack(fill="x", pady=(6, 0))
-        ctk.CTkButton(left, text=T("Delete"), height=30, command=lambda: self.delete(it), **BTN2).pack(fill="x", pady=(6, 0))
+        fav.pack(side="left", fill="x", expand=True)
         ctk.CTkLabel(left, text=f"{hms(it['start'])} - {hms(it['end'])}", text_color=MUTED, font=small).pack(pady=(6, 0))
 
         r = ctk.CTkFrame(f, fg_color="transparent")
@@ -221,10 +223,10 @@ class ClipsPanel(ctk.CTkFrame):
         row = ctk.CTkFrame(r, fg_color="transparent")
         row.pack(fill="x", pady=(6, 0))
         for label, n in (("Copy top 5", 5), ("Copy top 10", 10), ("Copy all tags", 0)):
-            b = ctk.CTkButton(row, text=T(label), width=112, height=30, **BTN2)
+            b = FitButton(row, text=T(label), width=112, height=30, **BTN2)
             b.configure(command=lambda b=b, n=n: self.copy(" ".join(tag_words(st.tags)[: n or None]), b))
             b.pack(side="left", padx=(0, 6))
-        b = ctk.CTkButton(row, text=T("Copy full post"), width=140, height=30, **BTN2)
+        b = FitButton(row, text=T("Copy full post"), width=140, height=30, **BTN2)
         b.configure(command=lambda b=b: self.copy(st.post(), b))
         b.pack(side="left")
 
@@ -249,7 +251,7 @@ class ClipsPanel(ctk.CTkFrame):
         tb = ctk.CTkTextbox(r, height=90, wrap="word", **BOX)
         tb.insert("1.0", it.get("text", ""))
         tb.configure(state="disabled")
-        tbtn = ctk.CTkButton(r, text=T("Show transcript"), width=160, height=28, **BTN2)
+        tbtn = FitButton(r, text=T("Show transcript"), width=160, height=28, **BTN2)
 
         def toggle():
             if tb.winfo_ismapped():
@@ -325,7 +327,7 @@ class ClipsPanel(ctk.CTkFrame):
         self.clipboard_append(text)
         self.update()
         old = btn.cget("text")
-        btn.configure(text=self.T("Copied ✓"))
+        btn.configure(text=self.T("Copied ✓") if old else "✓")  # an icon-only button just shows a tick
         self.after(1200, lambda: btn.winfo_exists() and btn.configure(text=old))
 
     def copy_all(self):

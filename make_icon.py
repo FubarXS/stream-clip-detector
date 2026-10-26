@@ -13,7 +13,7 @@ zůstávají stejné.
 """
 import math
 import sys
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 S = 512
 SIZES = [16, 32, 48, 96, 128]
@@ -63,13 +63,29 @@ def arc_mask(start, end):
 
 
 def glyph_masks():
-    """Clip symbol: play triangle (gradient, moves right) + a cut bar in bone white."""
-    tri = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(tri).polygon([(120, 118), (120, 394), (338, 256)], fill=255)
-    tri = tri.filter(ImageFilter.GaussianBlur(10)).point(lambda p: 255 if p > 128 else 0)  # soft corners
-    bar = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(bar).rounded_rectangle([372, 118, 424, 394], radius=10, fill=255)
-    return tri, bar
+    """Clapperboard: an open striped clapper stick over a striped bar (magma), the board below in bone white with a
+    play triangle cut out of it. Returns (stripes_mask, board_mask) - the first gets the top gradient, the second the bottom."""
+    dy = 34  # moves the whole glyph down a little so it sits in the middle of the tile
+    hinge = (104, 206 + dy)
+
+    def bar(y0, y1):  # a striped bar: rounded base minus slanted dark stripes
+        base = Image.new("L", (S, S), 0)
+        ImageDraw.Draw(base).rounded_rectangle([104, y0, 408, y1], radius=8, fill=255)
+        cut = Image.new("L", (S, S), 0)
+        d = ImageDraw.Draw(cut)
+        for x in range(136, 420, 76):  # slanted gaps between the stripes
+            d.polygon([(x, y0 - 4), (x + 18, y0 - 4), (x - 2, y1 + 4), (x - 20, y1 + 4)], fill=255)
+        return ImageChops.subtract(base, cut)
+
+    fixed = bar(206 + dy, 252 + dy)
+    stick = bar(150 + dy, 196 + dy).rotate(11, center=hinge, resample=Image.BICUBIC)  # opened, hinged on the left
+    board = Image.new("L", (S, S), 0)
+    d = ImageDraw.Draw(board)
+    d.rounded_rectangle([104, 262 + dy, 408, 404 + dy], radius=12, fill=255)
+    play = Image.new("L", (S, S), 0)  # the play triangle, punched out of the board
+    ImageDraw.Draw(play).polygon([(232, 290 + dy), (232, 378 + dy), (312, 334 + dy)], fill=255)
+    play = play.filter(ImageFilter.GaussianBlur(5)).point(lambda p: 255 if p > 128 else 0)
+    return ImageChops.lighter(fixed, stick), ImageChops.subtract(board, play)
 
 
 def build(variant):
@@ -79,9 +95,9 @@ def build(variant):
     ImageDraw.Draw(tile_mask).rounded_rectangle([0, 0, S - 1, S - 1], radius=96, fill=255)
     img.paste(Image.new("RGB", (S, S), rgb(TILE)), (0, 0), tile_mask)
     # glyph for Stream Clip Detector (the kit's sync symbol replaced; tile and colors unchanged)
-    tri, bar = glyph_masks()
-    img.paste(hgradient(*v["top"]), (0, 0), tri)
-    img.paste(hgradient(*v["bottom"]), (0, 0), bar)
+    stripes, board = glyph_masks()
+    img.paste(hgradient(*v["top"]), (0, 0), stripes)
+    img.paste(hgradient(*v["bottom"]), (0, 0), board)
     return img
 
 

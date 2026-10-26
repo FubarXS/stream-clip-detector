@@ -28,6 +28,9 @@ class RunnerMixin:
         if not finished and not cfg["video"] and not cfg["url"]:
             messagebox.showwarning("No source", "Pick a video file or paste a Twitch VOD link.")
             return
+        if not finished and cfg["video"] and cfg["url"]:
+            messagebox.showwarning(self.tr("Two sources"), self.tr("Both a file and a link are filled in. Clear one of them."))
+            return
         self.save_cfg(cfg)
         self.cancel, self.running, self.t0, self.status_text = False, True, time.time(), "Starting..."
         self.last_out = time.time()

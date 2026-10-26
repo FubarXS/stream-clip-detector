@@ -26,9 +26,10 @@ from gui_layout import LayoutMixin
 from gui_widgets import Blocks, Tip
 from gui_strings import CS, tr as tr_text
 from gui_runner import RunnerMixin
+from gui_source import SourceMixin
 
 
-class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
+class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
     def __init__(self):
         super().__init__()
         ctk.set_appearance_mode("dark")
@@ -56,7 +57,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
                 V[k] = tk.DoubleVar(value=float(cfg[k]))
             except Exception:
                 V[k] = tk.DoubleVar(value=float(DEFAULTS[k]))
-        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info", "reuse_transcript"):
+        for k in ("whisper", "cut", "loud_on", "llm_on", "save_transcript", "save_info", "reuse_transcript", "out_beside"):
             V[k] = tk.BooleanVar(value=bool(cfg[k]))
         pick = lambda d, v, default: next((n for n, c in d.items() if c == v), default)
         self.model_name = tk.StringVar(value=pick(MODELS, cfg["model"], "Balanced"))
@@ -66,7 +67,9 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.lang = cfg["ui_lang"]
         self.ui_lang_var = tk.StringVar(value="Čeština" if self.lang == "cs" else "English")
+        self.init_source(cfg)
         self.build(cfg)
+        self.setup_source()
         self.apply_language(self.lang)
         self.after(250, self.poll)
 
@@ -108,7 +111,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         v = self.vars
         i = lambda k: str(int(round(v[k].get())))
         return {
-            "video": v["video"].get().strip(), "url": v["url"].get().strip(), "out": v["out"].get().strip(),
+            "video": v["video"].get().strip(), "url": v["url"].get().strip(), "out": v["out"].get().strip(), "out_beside": v["out_beside"].get(),
             "top": i("top"), "before": i("before"), "after": i("after"), "gap": i("gap"),
             "threshold": f"{v['threshold'].get():.1f}", "loud_db": i("loud_db"), "loud_on": v["loud_on"].get(),
             "model": MODELS[self.model_name.get()], "lang": LANGS[self.lang_name.get()],
@@ -124,9 +127,12 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
         }
 
     def save_cfg(self, cfg=None):
+        cfg = dict(cfg or self.collect())
+        if self.beside_on:  # keep the user's own folder, not the one derived from the video
+            cfg["out"] = self.out_custom
         try:
             with open(CFG, "w", encoding="utf-8") as f:
-                json.dump(cfg or self.collect(), f, ensure_ascii=False, indent=2)
+                json.dump(cfg, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
 
@@ -148,7 +154,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
                 yield from walk(ch)
 
         for w in walk(self):
-            if w is self.btn or w is self.status or not type(w).__module__.startswith("customtkinter"):
+            if w is self.btn or w is self.status or not isinstance(w, ctk.CTkBaseClass):
                 continue
             try:
                 cur = w.cget("text")
@@ -157,6 +163,9 @@ class App(LayoutMixin, Blocks, RunnerMixin, ctk.CTk):
             en = self.en_text.setdefault(str(w), cur)
             if en in CS:
                 w.configure(text=tr_text(en, lang))
+        for show in getattr(self, "choices", []):  # dropdown lists in the new language
+            show()
+        self.sync_source()  # the hint under the source fields
         self.set_run_button(self.running)
         if not self.running:
             self.status.configure(text=self.tr("Ready"))

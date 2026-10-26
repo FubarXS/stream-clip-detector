@@ -1,5 +1,6 @@
 """Reusable widgets: hover tooltip and form-building helpers (cards, labeled rows, sliders...)."""
 import tkinter as tk
+import tkinter.font as tkfont
 import customtkinter as ctk
 
 from brand import ACCENT, TEXT, MUTED, BORDER_H, CARD, ENTRY, BTN2, OPTION, SLIDER
@@ -27,6 +28,36 @@ class Tip:
         if self.tw:
             self.tw.destroy()
             self.tw = None
+
+
+class FitButton(ctk.CTkButton):
+    """A button that never clips its text: 'width' is only the minimum, the button grows with its text
+    (longer words in another language, or the text changing later, e.g. 'Copied')."""
+    PAD = 22
+
+    def __init__(self, master, text="", width=140, **kw):
+        self._min_w = width
+        super().__init__(master, text=text, width=width, **kw)
+        self._fit()
+
+    def configure(self, require_redraw=False, **kw):
+        super().configure(require_redraw=require_redraw, **kw)
+        if "text" in kw:
+            self._fit()
+
+    def _fit(self):
+        text = self.cget("text")
+        if not text:  # icon only: back to the plain width
+            if self.cget("width") != self._min_w:
+                super().configure(width=self._min_w)
+            return
+        font = self.cget("font")
+        font = font if isinstance(font, tkfont.Font) else tkfont.Font(font=font)
+        img = self.cget("image")
+        extra = (img.cget("size")[0] + 6) if img else 0
+        need = max(self._min_w, font.measure(text) + self.PAD + extra)
+        if need != self.cget("width"):
+            super().configure(width=need)
 
 
 class Blocks:
@@ -57,13 +88,25 @@ class Blocks:
             self.info(r, tip).pack(side="left", padx=6)
         return r
 
-    def entry(self, parent, text, key, browse=None, tip=None):
+    def entry(self, parent, text, key, browse=None, tip=None, clear=False):
+        """Labeled text field. The field (and its Browse / clear buttons) is kept in self.fields[key] so it can be disabled."""
         self.lab(parent, text, tip)
         row = ctk.CTkFrame(parent, fg_color="transparent")
         row.pack(fill="x", padx=16, pady=(2, 4))
-        ctk.CTkEntry(row, textvariable=self.vars[key], **ENTRY).pack(side="left", fill="x", expand=True)
+        e = ctk.CTkEntry(row, textvariable=self.vars[key], **ENTRY)
+        e.pack(side="left", fill="x", expand=True)
+        btns = []
+        if clear:
+            x = FitButton(row, text="✕", width=32, height=32, command=lambda: self.vars[key].set(""), **BTN2)
+            x.pack(side="left", padx=(8, 0))
+            Tip(x, "Clear")
+            btns.append(x)
         if browse:
-            ctk.CTkButton(row, text="Browse", width=70, height=32, command=browse, **BTN2).pack(side="left", padx=(8, 0))
+            b = FitButton(row, text="Browse", width=70, height=32, command=browse, **BTN2)
+            b.pack(side="left", padx=(8, 0))
+            btns.append(b)
+        self.fields = getattr(self, "fields", {})
+        self.fields[key] = (e, btns)
 
     def slider(self, parent, text, key, lo, hi, step, tip, unit="", dec=0):
         var, dflt = self.vars[key], float(DEFAULTS[key])
@@ -86,5 +129,18 @@ class Blocks:
         upd()
 
     def option(self, parent, text, tip, var, values):
+        """Dropdown. The variable keeps the English key (the program looks it up); the list shows it translated."""
         self.lab(parent, text, tip)
-        ctk.CTkOptionMenu(parent, values=list(values), variable=var, **OPTION).pack(anchor="w", padx=16, pady=(2, 4))
+        keys = list(values)
+        menu = ctk.CTkOptionMenu(parent, values=[self.tr(k) for k in keys], **OPTION)
+        menu.configure(command=lambda shown: var.set(keys[[self.tr(k) for k in keys].index(shown)]))
+        menu.pack(anchor="w", padx=16, pady=(2, 4))
+
+        def show(*_):  # the variable or the language changed: show the current choice in the current language
+            menu.configure(values=[self.tr(k) for k in keys])
+            menu.set(self.tr(var.get()))
+
+        var.trace_add("write", show)
+        self.choices = getattr(self, "choices", [])
+        self.choices.append(show)
+        show()

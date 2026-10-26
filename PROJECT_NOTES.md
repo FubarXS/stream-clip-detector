@@ -16,7 +16,9 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `.github/workflows/build-windows.yml` | Builds the Windows zip files when a `v*` tag is pushed |
 | `gui_clips.py` | Clips tab: cards, platform tabs, favorites, delete, copy buttons |
 | `gui_runner.py` | Starts/stops the helper processes, shows progress and status |
-| `gui_widgets.py` | Tooltip and form helpers (cards, sliders, options) |
+| `gui_widgets.py` | Tooltip, `FitButton` (never clips its text) and form helpers (cards, sliders, translated dropdowns) |
+| `gui_icons.py` | Icons drawn with Pillow at run time (trash, edit, copy, list, gallery), `icon_button`, the list/gallery `ViewToggle` |
+| `gui_source.py` | One-source rule (file OR Twitch link) and "save clips next to the recording" |
 | `gui_dialogs.py` | Small dialogs (game question) |
 | `gui_config.py` | Defaults, option lists, reasons for defaults |
 | `gui_strings.py` | Czech texts (English text is the key) |
@@ -49,7 +51,13 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
   Edits in the Clips window are written back to it on close. Switches: `--no-info-files`, `--no-transcript-files` (speech is still analyzed).
 - UI text is English in the code; Czech lives in `gui_strings.py` (lookup by the English text).
 - Static widget texts are translated by walking the widget tree; texts built at runtime use `self.tr(...)`.
-- Pillow is optional (nicer visuals); the app must work without it.
+- Pillow is optional (nicer visuals); the app must work without it (icon buttons then show a short translated word).
+- Use `FitButton` instead of `ctk.CTkButton` for buttons with text: its `width` is only a minimum, so longer Czech words never get cut off.
+  Small fixed-size buttons (the corner cross, the star) stay `ctk.CTkButton`.
+- Dropdowns (`Blocks.option`) keep the ENGLISH key in their variable (the program looks it up) and show it translated; new option
+  texts need a Czech entry in `gui_strings.py`.
+- Source rules: only one of "Recording" / "Twitch link" can be filled (the other field is locked). "Save clips next to the recording"
+  writes into `<video folder>/<video name>_clips`; `settings.json` keeps the user's own folder (`out`) plus `out_beside`.
 - Never write a file before the new content is computed (a failed read once emptied a file).
 
 ## Testing without a screen

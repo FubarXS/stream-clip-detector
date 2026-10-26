@@ -2,8 +2,10 @@
 'Edit' opens the full card of the list view in its own window."""
 import customtkinter as ctk
 
-from brand import CARD, BTN2, TEXT, MUTED, ACCENT, BG, window_icon
+from brand import CARD, BTN2, BTN_H, TEXT, MUTED, ACCENT, BG, RADIUS_MD, window_icon
 from gui_player import open_player
+from gui_widgets import Tip, FitButton
+from gui_icons import icon_button
 
 COL_W = 330  # width of one gallery card (including the gap)
 
@@ -41,6 +43,10 @@ def build(panel, shown):
         top = ctk.CTkFrame(f, fg_color="transparent")
         top.pack(fill="x", padx=12)
         ctk.CTkLabel(top, text=badge, text_color=ACCENT, font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
+        xb = ctk.CTkButton(top, text="✕", width=24, height=24, fg_color="transparent", hover_color=BTN_H, text_color=MUTED,
+                           corner_radius=RADIUS_MD, command=lambda it=it: panel.remove(it))
+        xb.pack(side="right", padx=(4, 0))  # take the clip off the list (the files stay on disk)
+        Tip(xb, "Remove from the list (the files stay on disk)")
         fav = ctk.CTkButton(top, text="★" if it.get("favorite") else "☆", width=30, height=26, **BTN2)
         fav.configure(command=lambda it=it, b=fav: panel.toggle_fav(it, b, gallery=True))
         fav.pack(side="right")
@@ -51,15 +57,14 @@ def build(panel, shown):
                      font=ctk.CTkFont(size=13, weight="bold")).pack(fill="x", padx=12, pady=(4, 6))
         row = ctk.CTkFrame(f, fg_color="transparent")
         row.pack(fill="x", padx=12, pady=(0, 12))
-        for text, cmd in ((T("▶ Play"), lambda it=it: open_player(panel, it, T)),
-                          (T("Copy post"), None), (T("Edit"), lambda it=it: open_details(panel, it)),
-                          (T("Delete"), lambda it=it: panel.delete(it))):
-            b = ctk.CTkButton(row, text=text, height=28, width=10, **BTN2)
-            if cmd is None:
-                b.configure(command=lambda b=b, p=post: panel.copy(p, b))
-            else:
-                b.configure(command=cmd)
-            b.pack(side="left", expand=True, fill="x", padx=2)
+        # Play keeps its word (and takes the free space); the rest are icons, so nothing can be cut off in a narrow window
+        FitButton(row, text=T("▶ Play"), height=28, width=80, command=lambda it=it: open_player(panel, it, T),
+                  **BTN2).pack(side="left", expand=True, fill="x")
+        copy = icon_button(row, "copy", "Copy post", None, T)
+        copy.configure(command=lambda b=copy, p=post: panel.copy(p, b))
+        copy.pack(side="left", padx=(4, 0))
+        icon_button(row, "edit", "Edit", lambda it=it: open_details(panel, it), T).pack(side="left", padx=(4, 0))
+        icon_button(row, "trash", "Delete", lambda it=it: panel.delete(it), T).pack(side="left", padx=(4, 0))
 
 
 def open_details(panel, it):
