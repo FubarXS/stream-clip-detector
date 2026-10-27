@@ -53,7 +53,7 @@ def build(panel, shown):
         t0, t1 = it["start"], it["end"]
         ctk.CTkLabel(top, text=f"  {t0 // 3600}:{t0 % 3600 // 60:02d}:{t0 % 60:02d}", text_color=MUTED,
                      font=ctk.CTkFont(size=11)).pack(side="left")
-        ctk.CTkLabel(f, text=title or T("(no title)"), text_color=TEXT, wraplength=COL_W - 50, justify="left", anchor="w",
+        ctk.CTkLabel(f, text=title or T("(no title)" if a else "(no title - AI was off or failed)"), text_color=TEXT, wraplength=COL_W - 50, justify="left", anchor="w",
                      font=ctk.CTkFont(size=13, weight="bold")).pack(fill="x", padx=12, pady=(4, 6))
         row = ctk.CTkFrame(f, fg_color="transparent")
         row.pack(fill="x", padx=12, pady=(0, 12))

@@ -1,13 +1,37 @@
 """Constants and default settings used by the GUI (edit colors, defaults, option lists here)."""
 import os
+import shutil
 import sys
 import subprocess
 
 import keywords  # default keyword lists (light module: the window does not need numpy)
 
 FROZEN = getattr(sys, "frozen", False)  # True in the packaged .exe
-HERE = os.path.dirname(sys.executable) if FROZEN else os.path.dirname(os.path.abspath(__file__))  # settings, clips live here
-CFG = os.path.join(HERE, "gui_settings.json")
+HERE = os.path.dirname(sys.executable) if FROZEN else os.path.dirname(os.path.abspath(__file__))  # the program, ffmpeg, default clips
+
+
+def _data_dir():
+    """Where settings, run files and the crash log live. The packaged app keeps them in %APPDATA%\\StreamClipDetector,
+    because every release unpacks into a NEW folder and settings next to the .exe would start from the defaults again
+    (for example the AI switch is off by default). Running from the source files keeps them next to the code."""
+    if FROZEN and os.name == "nt" and os.environ.get("APPDATA"):
+        d = os.path.join(os.environ["APPDATA"], "StreamClipDetector")
+        try:
+            os.makedirs(d, exist_ok=True)
+            return d
+        except OSError:
+            pass
+    return HERE
+
+
+DATA = _data_dir()
+CFG = os.path.join(DATA, "gui_settings.json")
+_OLD = os.path.join(HERE, "gui_settings.json")  # where versions up to 0.5.1 kept it
+if DATA != HERE and not os.path.exists(CFG) and os.path.exists(_OLD):
+    try:
+        shutil.copy2(_OLD, CFG)  # first start after the move: take over the settings from next to the .exe
+    except OSError:
+        pass
 _FF = os.path.join(HERE, "ffmpeg")  # a bundled ffmpeg folder (ffmpeg, ffprobe, ffplay) is used before the system one
 if os.path.isdir(_FF):
     os.environ["PATH"] = _FF + os.pathsep + os.environ.get("PATH", "")

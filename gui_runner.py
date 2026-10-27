@@ -11,7 +11,7 @@ from tkinter import filedialog, messagebox
 
 from gui_dialogs import ask_text
 
-from gui_config import NOWIN, LOWPRI, HERE, worker_cmd
+from gui_config import NOWIN, LOWPRI, DATA, HERE, worker_cmd
 
 
 VIDEO_EXT = (".mp4", ".mkv", ".ts", ".flv", ".mov")
@@ -119,7 +119,7 @@ class RunnerMixin:
                 self.exec([*worker_cmd("clip_detector"), video, "--measure", "--loud-db", cfg["loud_db"],
                            "--audio-track", cfg["audio_track"]])
                 return
-            conf = os.path.join(HERE, "run_config.json")
+            conf = os.path.join(DATA, "run_config.json")
             kd = lambda t: [k.strip().lower() for k in t.splitlines() if k.strip()]
             with open(conf, "w", encoding="utf-8") as f:
                 json.dump({"keywords": kd(cfg["kw_en"]) + kd(cfg["kw_cs"]), "strong": kd(cfg["kw_strong"])}, f)
@@ -129,6 +129,9 @@ class RunnerMixin:
                    "--device", cfg["device"], "--loud-db", cfg["loud_db"], "--audio-track", cfg["audio_track"], "--config", conf, "--out", cfg["out"]]
             if cfg["secret"]:
                 cmd += ["--secret", cfg["secret"], "--secret-back", cfg["secret_back"]]
+            if not (cfg["llm_on"] and cfg["llm_model"]):  # the most common reason for clips without titles and hashtags
+                self.q.put(("log", self.tr("AI suggestions are OFF - clips get no titles or hashtags. "
+                                           "Turn on 'Rate clips, suggest hashtags and memes' in the Analysis tab.") + "\n"))
             if cfg["llm_on"] and cfg["llm_model"]:
                 cmd += ["--llm", cfg["llm_model"], "--min-funny", cfg["min_funny"], "--tag-pool", cfg["tag_pool"]]
                 if cfg["game"]:

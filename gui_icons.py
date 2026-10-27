@@ -48,29 +48,45 @@ def _copy(d, c, w):  # two sheets of paper
     _box(d, (3.5, 8.5, 15, 21), c, w, 2.2, fill=(0, 0, 0, 0))
 
 
-def _list(d, c, w):  # the classic bullet list: dot and line, three times
-    for y in (6, 12, 18):
-        d.ellipse([(4.2 - 1.5) * K, (y - 1.5) * K, (4.2 + 1.5) * K, (y + 1.5) * K], fill=c)
-        _lines(d, [(9, y), (20, y)], c, w)
+# The two view icons are laid out in units of 4/3 of the 24 grid = exactly 1 pixel at the usual 18 px size, so at 100 %
+# their edges fall on whole pixels (crisp) and the ink is centred: list 3..15 px, grid 3..15 px of 18.
+P = 24 / 18
 
 
-def _grid(d, c, w):  # four squares
-    for x, y in ((3.5, 3.5), (13.5, 3.5), (3.5, 13.5), (13.5, 13.5)):
-        _box(d, (x, y, x + 7, y + 7), c, w, 1.6, fill=c)
+def _list(d, c, w):  # bullet list: a 3 px dot and a 2 px line, three times (rows at 4, 9 and 14 px)
+    for y in (4, 9, 14):
+        d.ellipse([3 * P * K, (y - 1.5) * P * K, 6 * P * K, (y + 1.5) * P * K], fill=c)
+        d.rectangle([8 * P * K, (y - 1) * P * K, 15 * P * K - 1, (y + 1) * P * K - 1], fill=c)
+
+
+def _grid(d, c, w):  # four rounded squares, 5 px each with a 2 px gap
+    for x, y in ((3, 3), (10, 3), (3, 10), (10, 10)):
+        d.rounded_rectangle([x * P * K, y * P * K, (x + 5) * P * K - 1, (y + 5) * P * K - 1], radius=1.3 * P * K, fill=c)
 
 
 DRAW = {"trash": _trash, "edit": _edit, "copy": _copy, "list": _list, "grid": _grid}
 
 
+def centered(im):
+    """The same picture with its ink (not its drawing grid) exactly in the middle of the canvas."""
+    box = im.getbbox()
+    if not box:
+        return im
+    out = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    out.paste(im.crop(box), ((im.width - (box[2] - box[0])) // 2, (im.height - (box[3] - box[1])) // 2))
+    return out
+
+
 def icon(name, size=18, color=TEXT):
-    """CTkImage of a named icon, or None without Pillow."""
+    """CTkImage of a named icon, or None without Pillow. The big drawing goes to CTk as it is, so it is shrunk only
+    once, straight to the real pixel size of the screen (an extra step in between made the edges soft)."""
     if Image is None:
         return None
     key = (name, size, color)
     if key not in _cache:
         im = Image.new("RGBA", (24 * K, 24 * K), (0, 0, 0, 0))
         DRAW[name](ImageDraw.Draw(im), color, round(1.9 * K))
-        _cache[key] = ctk.CTkImage(im.resize((size * 2, size * 2), Image.LANCZOS), size=(size, size))
+        _cache[key] = ctk.CTkImage(centered(im), size=(size, size))
     return _cache[key]
 
 

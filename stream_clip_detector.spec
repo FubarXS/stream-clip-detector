@@ -6,7 +6,7 @@ from PyInstaller.utils.hooks import collect_all
 
 datas, binaries = [("icons", "icons")], []
 hidden = ["clip_detector", "analyze_finished", "calibrate", "llm_judge", "platforms", "transcript_cache",
-          "keywords", "exports", "gui_player", "gui_gallery"]  # started by name in "--worker" mode, so not found by import scanning
+          "keywords", "exports", "gui_player", "gui_gallery", "llm_parse"]  # started by name in "--worker" mode, so not found by import scanning
 packages = ["faster_whisper", "ctranslate2", "customtkinter", "onnxruntime", "av", "tokenizers", "yt_dlp"]
 if os.environ.get("INCLUDE_CUDA") == "1":
     packages += ["nvidia.cublas", "nvidia.cudnn"]  # clip_detector._add_cuda_dlls() finds nvidia/*/bin next to the program

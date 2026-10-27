@@ -10,7 +10,7 @@ except ImportError:  # the app still works, just without pictures
 
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 KOFI_URL = "https://ko-fi.com/fubarxs"
 
 BG, PANEL = "#000000", "#1a1411"
@@ -52,12 +52,15 @@ def image(name, size):
 
 
 def window_icon(window):
-    path = os.path.join(ICONS, "icon128.png")
-    if os.path.exists(path):
+    # Every size is handed over, so the title bar (16-24 px) and the taskbar (32-48 px) get their own picture; with only
+    # the 128 px one Tk shrinks it without any smoothing and the small icon comes out jagged.
+    paths = [os.path.join(ICONS, f"icon{s}.png") for s in (16, 20, 24, 32, 40, 48, 64, 128)]
+    paths = [p for p in paths if os.path.exists(p)]
+    if paths:
         try:
-            photo = tk.PhotoImage(file=path)
-            window._icon_ref = photo
-            window.after(300, lambda: window.iconphoto(True, photo))  # CTk sets its own icon after ~200 ms
+            photos = [tk.PhotoImage(file=p) for p in paths]
+            window._icon_ref = photos
+            window.after(300, lambda: window.iconphoto(True, *photos))  # CTk sets its own icon after ~200 ms
             ico = os.path.join(ICONS, "app.ico")
             if os.name == "nt" and os.path.exists(ico):
                 window.after(320, lambda: window.iconbitmap(ico))

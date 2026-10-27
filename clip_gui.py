@@ -21,7 +21,7 @@ except ImportError:
 
 import exports
 from brand import ACCENT
-from gui_config import CFG, DEFAULTS, DEVICES, FORMATS, HERE, LANGS, MODELS, NUM
+from gui_config import CFG, DATA, DEFAULTS, DEVICES, FORMATS, LANGS, MODELS, NUM
 from gui_layout import LayoutMixin
 from gui_widgets import Blocks, Tip
 from gui_strings import CS, tr as tr_text
@@ -316,7 +316,7 @@ def main():
         App().mainloop()
     except Exception:
         err = traceback.format_exc()
-        with open(os.path.join(HERE, "crash_log.txt"), "w", encoding="utf-8") as f:
+        with open(os.path.join(DATA, "crash_log.txt"), "w", encoding="utf-8") as f:
             f.write(err)
         messagebox.showerror("Stream Clip Detector crashed", err[-1500:] + "\n\n(Also saved to crash_log.txt)")
 

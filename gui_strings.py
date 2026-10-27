@@ -101,7 +101,9 @@ CS.update({
         "MP4 se přehraje všude. Pokud DaVinci Resolve u MP4 klipu neukáže všechny audio stopy (multistopáž z OBS), vyber MOV. "
         "MKV je formát, ve kterém nahrává OBS (free verze DaVinci Resolve ho nepodporuje). Všechny audio stopy záznamu zůstanou zachované v každém formátu.",
     "List": "Seznam", "Gallery": "Galerie", "Load folder...": "Načíst složku...",
-    "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)",
+    "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)", "(no title - AI was off or failed)": "(bez názvu - AI byla vypnutá nebo selhala)",
+    "AI suggestions are OFF - clips get no titles or hashtags. Turn on 'Rate clips, suggest hashtags and memes' in the Analysis tab.":
+        "AI návrhy jsou VYPNUTÉ - klipy nedostanou názvy ani hashtagy. Zapni 'Ohodnotit klipy, navrhnout hashtagy a memy' v záložce Analýza.",
     "Open in system player": "Otevřít v systémovém přehrávači",
     "No sound: ffplay (part of the ffmpeg download) was not found.": "Bez zvuku: nenalezen ffplay (je součástí stažení ffmpeg).",
 })

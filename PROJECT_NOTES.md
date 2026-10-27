@@ -60,6 +60,15 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
 - Source rules: only one of "Recording" / "Twitch link" can be filled (the other field is locked). "Save clips next to the recording"
   writes into `<video folder>/<video name>_clips`; `settings.json` keeps the user's own folder (`out`) plus `out_beside`.
 - Never write a file before the new content is computed (a failed read once emptied a file).
+- Settings (`gui_settings.json`), `run_config.json` and `crash_log.txt` live in `DATA` (`gui_config.py`): `%APPDATA%\StreamClipDetector`
+  in the packaged app, next to the code when run from source. Every release unpacks into a NEW folder, so settings next to the
+  .exe started from the defaults each time (the AI switch is off by default -> clips without titles and hashtags). Versions up to
+  0.5.1 kept them next to the .exe; the first start copies that file over once.
+- The AI texts are optional: with the switch off the log says so and gallery cards say "AI was off or failed" instead of an empty title.
+- Icons: `make_icon.py` makes two glyphs - the detailed clapperboard (>= 64 px) and a fat one with 4 stripes for 16-48 px - and writes
+  `app.ico` with one hand-made picture per size (16, 20, 24, 32, 40, 48, 64, 128, 256; Windows asks for 20/24/40 at 125/150/250 %).
+  Small sizes are shrunk with HAMMING, not LANCZOS (LANCZOS puts a bright ring next to hard edges). `brand.window_icon` passes
+  all PNG sizes to Tk. The list/gallery icons in `gui_icons.py` are laid out in 4/3 units = 1 px at 18 px, so they are crisp at 100 %.
 
 ## Testing without a screen
 Use `xvfb-run` on Linux for the window; a small fake Ollama HTTP server for the AI step; replace `clip_detector.transcribe`
