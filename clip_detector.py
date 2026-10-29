@@ -249,6 +249,7 @@ def main():
     ap.add_argument("--measure", action="store_true", help="only measure loudness and print a suggestion")
     ap.add_argument("--llm", default="", help="Ollama model for the optional AI step")
     ap.add_argument("--min-funny", type=float, default=5.0, help="min. AI funny rating (0-10)")
+    ap.add_argument("--ai-scan", action="store_true", help="the AI also reads the whole transcript and names clip candidates")
     ap.add_argument("--game", default="", help="game being played (for hashtags)")
     ap.add_argument("--extra-tags", default="", help="your own hashtags added to every clip")
     ap.add_argument("--tag-pool", type=int, default=50, help="how many hashtags the AI collects (General list)")
@@ -304,6 +305,10 @@ def main():
         print("AI step needs speech detection (Whisper) - skipped.")
         use_ai = False
     pool = pick_peaks(total, max(args.top * 2, args.top + 6), args.min_gap, args.threshold * 0.6) if use_ai else peaks
+    scan_why = {}
+    if use_ai and args.ai_scan:  # the AI reads the transcript and adds moments loudness and trigger words missed
+        import llm_scan
+        pool, scan_why = llm_scan.add_candidates(args.llm, segments, pool, args, n)
     os.makedirs(args.out, exist_ok=True)
 
     marks = find_secret(segments, args.secret) if (args.secret and segments) else []
@@ -339,6 +344,8 @@ def main():
             keep = {int(p) for p in peaks}
             items = [it for it in items if it["kind"] == "marker" or it["peak"] in keep]
 
+    for it in items:
+        it["why"] = scan_why.get(it["peak"], "") + it["why"]  # said after judging, so the judge is not told "the AI picked it"
     for it in items:  # center the clip on the moment the AI found funniest
         a, m = it["ai"], (it["ai"] or {}).get("moment")
         if m is not None and it["kind"] != "marker" and it["start"] <= m <= it["end"]:

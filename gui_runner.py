@@ -134,6 +134,8 @@ class RunnerMixin:
                                            "Turn on 'Rate clips, suggest hashtags and memes' in the Analysis tab.") + "\n"))
             if cfg["llm_on"] and cfg["llm_model"]:
                 cmd += ["--llm", cfg["llm_model"], "--min-funny", cfg["min_funny"], "--tag-pool", cfg["tag_pool"]]
+                if cfg["ai_scan"]:
+                    cmd.append("--ai-scan")
                 if cfg["game"]:
                     cmd += ["--game", cfg["game"]]
                 if cfg["extra_tags"]:

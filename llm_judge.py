@@ -147,12 +147,17 @@ def links(terms):
             for t in terms]
 
 
-def _chat(model, system, user, url=URL, timeout=300):
+def _chat_raw(model, system, user, url=URL, timeout=300):
+    """The model's answer as plain text (it is asked for JSON, but small models do not always manage)."""
     body = json.dumps({"model": model, "stream": False, "format": "json", "options": OPTIONS,
                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        return parse.load_reply(json.loads(r.read())["message"]["content"])
+        return json.loads(r.read())["message"]["content"]
+
+
+def _chat(model, system, user, url=URL, timeout=300):
+    return parse.load_reply(_chat_raw(model, system, user, url, timeout))
 
 
 def adapt_all(model, items, game="", extra_tags="", url=URL):

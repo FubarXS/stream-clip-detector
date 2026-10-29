@@ -7,7 +7,7 @@ It does **not** depend on chat: it listens to loudness and to what you say. Ever
 - **Finds moments** from loudness spikes, trigger words you choose, and an optional secret phrase you say after a great moment.
 - **Cuts clips** (ffmpeg) with a preview image, and explains why each clip was picked.
 - **Speech to text** with [faster-whisper](https://github.com/SYSTRAN/faster-whisper): full transcript with timestamps and `.srt` subtitles.
-- **Optional AI helper** (free, local, via [Ollama](https://ollama.com)): rates how funny a clip is, writes a title and caption, and suggests hashtags and meme ideas for TikTok, YouTube Shorts and Instagram Reels.
+- **Optional AI helper** (free, local, via [Ollama](https://ollama.com)): rates how funny a clip is, writes a title and caption, and suggests hashtags and meme ideas for TikTok, YouTube Shorts and Instagram Reels. Optionally it also reads the whole transcript to find funny moments that were not loud and had no trigger words.
 - **Finished clips**: add a clip you already edited (for example exported from DaVinci Resolve) and get the same texts for it.
 - Saves an `_info.txt` next to every clip (title, hashtags, transcript); transcript files can be switched off. All audio tracks of an OBS recording are kept in the clips.
 - **Clips tab**: list or gallery view, play a clip right in the app (small player, no extra install), mark favorites, edit the texts

@@ -176,6 +176,12 @@ class LayoutMixin:
                        "a terminal:  ollama pull <model name>.  Nothing is sent online.")
         ctk.CTkSwitch(ai, text="Rate clips, suggest hashtags and memes", variable=self.vars["llm_on"],
                       **SWITCH).pack(anchor="w", padx=16, pady=(8, 4))
+        ctk.CTkSwitch(ai, text="Also let the AI read the whole transcript to find clips (slower)", variable=self.vars["ai_scan"],
+                      **SWITCH).pack(anchor="w", padx=16, pady=(4, 0))
+        ctk.CTkLabel(ai, text="The AI reads the speech in pieces of about 5 minutes and also suggests moments that were not loud "
+                              "and had no trigger words. Needs speech detection; roughly one extra AI request per 5 minutes of "
+                              "recording.", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left", wraplength=380,
+                     anchor="w").pack(anchor="w", padx=16, pady=(2, 6))
         self.lab(ai, "Ollama model name",
                  "Any model you installed with 'ollama pull' (see 'ollama list'). All Ollama models are free to download; "
                  "the limit is your GPU memory - bigger models understand humor better but are slower, and models larger "

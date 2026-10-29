@@ -101,7 +101,10 @@ CS.update({
         "MP4 se přehraje všude. Pokud DaVinci Resolve u MP4 klipu neukáže všechny audio stopy (multistopáž z OBS), vyber MOV. "
         "MKV je formát, ve kterém nahrává OBS (free verze DaVinci Resolve ho nepodporuje). Všechny audio stopy záznamu zůstanou zachované v každém formátu.",
     "List": "Seznam", "Gallery": "Galerie", "Load folder...": "Načíst složku...",
-    "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)", "(no title - AI was off or failed)": "(bez názvu - AI byla vypnutá nebo selhala)",
+    "Edit": "Upravit", "Copy post": "Kopírovat příspěvek", "▶ Play": "▶ Přehrát", "(no title)": "(bez názvu)",
+    "Also let the AI read the whole transcript to find clips (slower)": "Nechat AI přečíst celý přepis a hledat v něm klipy (pomalejší)",
+    "The AI reads the speech in pieces of about 5 minutes and also suggests moments that were not loud and had no trigger words. Needs speech detection; roughly one extra AI request per 5 minutes of recording.":
+        "AI čte řeč po kouscích zhruba po 5 minutách a navrhne i momenty, které nebyly hlasité a neměly spouštěcí slova. Potřebuje rozpoznávání řeči; zhruba jeden dotaz AI navíc na 5 minut záznamu.", "(no title - AI was off or failed)": "(bez názvu - AI byla vypnutá nebo selhala)",
     "AI suggestions are OFF - clips get no titles or hashtags. Turn on 'Rate clips, suggest hashtags and memes' in the Analysis tab.":
         "AI návrhy jsou VYPNUTÉ - klipy nedostanou názvy ani hashtagy. Zapni 'Ohodnotit klipy, navrhnout hashtagy a memy' v záložce Analýza.",
     "Open in system player": "Otevřít v systémovém přehrávači",

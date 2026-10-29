@@ -27,6 +27,7 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `keywords.py` | Default trigger words (kept tiny so the window does not import numpy) |
 | `calibrate.py` | Loudness check ("Measure my loudness") |
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
+| `llm_scan.py` | Optional: the AI reads the transcript in ~5 min pieces and names clip candidates that loudness and trigger words missed (`--ai-scan`) |
 | `llm_parse.py` | Tolerant reading of the AI reply (JSON in a fence, "8/10", hashtags as one string, cut-off answers) |
 | `platforms.py` | Per-platform rules (hashtag counts, title length) and text building |
 | `analyze_finished.py` | Analysis of already finished clips |
@@ -64,6 +65,11 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
   in the packaged app, next to the code when run from source. Every release unpacks into a NEW folder, so settings next to the
   .exe started from the defaults each time (the AI switch is off by default -> clips without titles and hashtags). Versions up to
   0.5.1 kept them next to the .exe; the first start copies that file over once.
+- AI scan (`--ai-scan`, off by default): finds candidates only. They join the normal ones and get the same detailed rating, so
+  the AI never decides alone what is kept. It adds at most `--top` candidates, none closer than one clip length to another,
+  and drops times that are not in the piece it was shown (invented). The reason is added to a clip's `why` only AFTER judging,
+  so the judge is not told "the AI picked this". Costs about one model call per 5 minutes of speech (3 h stream = ~40 calls).
+  Not cached yet: running the analysis again repeats the scan.
 - The AI texts are optional: with the switch off the log says so and gallery cards say "AI was off or failed" instead of an empty title.
 - Icons: `make_icon.py` makes two glyphs - the detailed clapperboard (>= 64 px) and a fat one with 4 stripes for 16-48 px - and writes
   `app.ico` with one hand-made picture per size (16, 20, 24, 32, 40, 48, 64, 128, 256; Windows asks for 20/24/40 at 125/150/250 %).

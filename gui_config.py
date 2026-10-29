@@ -61,7 +61,7 @@ DEFAULTS = {
     "save_transcript": True, "save_info": True, "reuse_transcript": True,
     "clip_format": "mp4", "clips_view": "list",
     "secret": "clip that", "secret_back": "45", "audio_track": "1",
-    "ui_lang": "en", "game": "", "extra_tags": "", "llm_on": False, "llm_model": "gemma3:12b", "min_funny": "5", "tag_pool": "50",
+    "ui_lang": "en", "game": "", "extra_tags": "", "llm_on": False, "ai_scan": False, "llm_model": "gemma3:12b", "min_funny": "5", "tag_pool": "50",
     "kw_en": "\n".join(keywords.KEYWORDS_EN), "kw_cs": "\n".join(keywords.KEYWORDS_CS), "kw_strong": "",
 }
 
