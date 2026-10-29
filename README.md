@@ -26,6 +26,19 @@ graphics cards - much larger), unzip it and start `StreamClipDetector.exe`. ffmp
 Optional: install [Ollama](https://ollama.com) and run `ollama pull <model>` for the AI helper. NVIDIA graphics cards make the
 speech recognition much faster (see `requirements.txt`); without one, choose **CPU** in the program.
 
+### Windows says "Windows protected your PC" (SmartScreen)
+
+The downloaded `StreamClipDetector.exe` is not digitally signed (a code-signing certificate costs thousands per year, and this
+tool is meant to stay free), so Windows SmartScreen warns about an unknown publisher. The program does nothing hidden - the
+whole source code is in this repository and nothing is uploaded anywhere. To start it:
+
+1. Click **More info**, then **Run anyway**.
+2. To avoid the question for good: right-click the downloaded `.zip` -> **Properties** -> tick **Unblock** -> OK, and only
+   then extract it. (Already extracted? In PowerShell: `Get-ChildItem -Recurse "C:\path\to\StreamClipDetector" | Unblock-File`.)
+   Do this again for every new version, because each download is a new file for Windows.
+
+Prefer not to run an exe at all? Use the Python install above - it has no warning, and you can read every line you run.
+
 ## Tips
 - Analyze your **local OBS recording** if you can: better quality than a Twitch VOD, and if your microphone is on its own audio track
   you can pick that track (**Audio track for analysis**) so the game sound does not count as your reaction.

@@ -76,6 +76,33 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
   Small sizes are shrunk with HAMMING, not LANCZOS (LANCZOS puts a bright ring next to hard edges). `brand.window_icon` passes
   all PNG sizes to Tk. The list/gallery icons in `gui_icons.py` are laid out in 4/3 units = 1 px at 18 px, so they are crisp at 100 %.
 
+## Changelog / commit messages
+
+Every release is ONE commit whose message is the changelog; the same text is used as the GitHub release notes. Format:
+
+- First line: `v<version>` (for example `v0.5.4`). Then a list.
+- Each item starts with `* ` and a label: `New:`, `Fix:`. A small change without a label is allowed (for example a changed
+  default). Wrap lines at about 78 characters; continuation lines are not indented.
+- Write for the streamer who uses the program, not for developers: say what the person sees or can now do, in plain
+  English, with the exact names of switches and buttons in quotes (for example "Also let the AI read the whole transcript
+  to find clips (slower)"). For a fix, say what went wrong and how it behaves now. No file or function names.
+- When a new feature is optional, say where to switch it on, what it does, and that it is off by default and changes
+  nothing when off.
+- The last item is always `* Version <version>.` and the same number is set in `VERSION` in `brand.py`.
+- Order the items by importance; the "Version" item is last.
+
+Example (v0.5.3):
+
+```
+v0.5.3
+* New: the AI can read the whole transcript to find clips. Switch on "Also let
+the AI read the whole transcript to find clips (slower)" in the AI section. It
+reads the speech in pieces of about 5 minutes and suggests moments that were
+not loud and had no trigger words; they are rated like all other candidates.
+It is off by default and changes nothing when off.
+* Version 0.5.3.
+```
+
 ## Testing without a screen
 Use `xvfb-run` on Linux for the window; a small fake Ollama HTTP server for the AI step; replace `clip_detector.transcribe`
 with a function returning fake segments (Whisper models are not needed to test the flow).

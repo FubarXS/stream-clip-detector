@@ -10,7 +10,7 @@ except ImportError:  # the app still works, just without pictures
 
 ICONS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 
-VERSION = "0.5.3"
+VERSION = "0.5.4"
 KOFI_URL = "https://ko-fi.com/fubarxs"
 
 BG, PANEL = "#000000", "#1a1411"
@@ -64,8 +64,34 @@ def window_icon(window):
             ico = os.path.join(ICONS, "app.ico")
             if os.name == "nt" and os.path.exists(ico):
                 window.after(320, lambda: window.iconbitmap(ico))
+                window.after(500, lambda: _sharp_windows_icon(window, ico))
         except Exception:
             pass
+
+
+def _sharp_windows_icon(window, ico):
+    """Tk gives Windows only one 32 px icon, which Windows then stretches on the taskbar at 125/150 % scaling (blurry).
+    Here the exact size for the current scaling is loaded from app.ico and set as the big and the small window icon."""
+    try:
+        import ctypes
+        from ctypes import wintypes
+        u = ctypes.windll.user32
+        u.LoadImageW.restype = wintypes.HANDLE
+        u.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+        u.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+        hwnd = u.GetParent(window.winfo_id()) or window.winfo_id()
+        try:
+            dpi = u.GetDpiForWindow(hwnd) or 96
+        except Exception:
+            dpi = 96
+        big, small = round(32 * dpi / 96), round(16 * dpi / 96)
+        for kind, px in ((1, big), (0, small)):  # WM_SETICON: ICON_BIG = 1, ICON_SMALL = 0
+            h = u.LoadImageW(None, ico, 1, px, px, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
+            if h:
+                u.SendMessageW(hwnd, 0x0080, kind, h)
+        window._icon_handles = True
+    except Exception:
+        pass
 
 
 class BrandButton(tk.Label):

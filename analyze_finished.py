@@ -40,18 +40,19 @@ def main():
             args.out, clip, (args.model, args.lang), lambda: c.transcribe(audio, args.model, args.lang, args.game, args.device),
             not args.no_transcript_cache)
         stem = os.path.splitext(name)[0]
+        print(f"   speech found: {len(segs)} segment(s), {len(c.window_text(segs, 0, dur).strip())} characters", flush=True)
         if not args.no_transcript_files:
             exports.write_srt(segs, os.path.join(folder, stem + ".srt"))
         peak = int(delta.argmax()) if len(delta) else 0
         thumb = os.path.join(folder, "thumbs", stem + ".png")
         new.append({"kind": "finished", "peak": peak, "start": 0, "end": int(dur), "score": 0, "ai": None,
-                    "file": clip, "links": [], "why": f"finished clip: {name}", "text": c.window_text(segs, 0, dur),
+                    "file": clip, "links": [], "topic": stem, "why": f"finished clip: {name}", "text": c.window_text(segs, 0, dur),
                     "lines": c.window_lines(segs, 0, dur), "hint": c.spike_hint(delta, 0, dur),
                     "thumb": exports.make_thumb(clip, min(peak, max(0, int(dur) - 1)), thumb)})
     if args.llm:
-        talk = [it for it in new if it["text"].strip()]
-        if len(talk) < len(new):
-            print("   Some clips contain no speech - no AI texts for them.", flush=True)
+        talk = list(new)  # clips without speech are judged too, from the game, the file name and the audio signals
+        if any(not it["text"].strip() for it in new):
+            print("   Some clips contain no recognized speech - the AI writes their texts from the game and the file name only.", flush=True)
         if talk and llm_judge.judge_all(args.llm, talk, game=args.game, extra_tags=args.extra_tags, pool=args.tag_pool):
             llm_judge.adapt_all(args.llm, talk, args.game, args.extra_tags)
             for it in talk:

@@ -32,6 +32,10 @@ PROMPT = (
     " \"meme_terms\": 2-3 short English search phrases for a fitting meme/GIF/sound}."
 )
 
+NO_SPEECH = (" This clip contains NO recognized speech (silent, whispering, music or only game sound). Ignore the rule about "
+             "the transcript: write the title, description and hashtags from the game, the topic (the clip's file name) and the "
+             "audio signals only, do not invent dialogue or events, set funny to 0 and evidence to \"\".")
+
 
 def clean_tags(raw, limit=20):
     """Hashtags: lowercase, no spaces or punctuation, no duplicates; the reach order is kept."""
@@ -68,23 +72,26 @@ def _evidence_ok(ev, text):
     return bool(words) and sum(w in have for w in words) / len(words) >= 0.8
 
 
-def ask(model, transcript, hint, plain, url=URL, timeout=300, game="", pool=20):
+def ask(model, transcript, hint, plain, url=URL, timeout=300, game="", pool=20, topic=""):
     """One clip -> rating + texts. An unusable answer gets one more try that asks for fewer hashtags
     (a long list is what makes small models loop); then ValueError says what the model sent."""
     err = ValueError("no answer")
     for n in dict.fromkeys((pool, min(pool, 20))):
         try:
-            return _ask_once(model, transcript, hint, plain, url, timeout, game, n)
+            return _ask_once(model, transcript, hint, plain, url, timeout, game, n, topic)
         except ValueError as e:  # includes json.JSONDecodeError
             err = e
     raise err
 
 
-def _ask_once(model, transcript, hint, plain, url, timeout, game, pool):
+def _ask_once(model, transcript, hint, plain, url, timeout, game, pool, topic=""):
+    silent = not plain.strip()
+    system = PROMPT.replace("15-20 hashtags", f"{pool} hashtags") + (NO_SPEECH if silent else "")
+    extra = f"Topic (file name): {topic}\n" if topic else ""
     body = json.dumps({
         "model": model, "stream": False, "format": "json", "options": OPTIONS,
-        "messages": [{"role": "system", "content": PROMPT.replace("15-20 hashtags", f"{pool} hashtags")},
-                     {"role": "user", "content": f"Game being played: {game or 'unknown'}\nAudio signals: {hint}\nTranscript:\n{transcript[:3500]}"}],
+        "messages": [{"role": "system", "content": system},
+                     {"role": "user", "content": f"Game being played: {game or 'unknown'}\n{extra}Audio signals: {hint}\nTranscript:\n{transcript[:3500] if not silent else '(no speech)'}"}],
     }).encode()
     req = urllib.request.Request(url, body, {"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -105,7 +112,8 @@ def _judge_loop(model, items, url=URL, game="", extra_tags="", pool=20):
     for i, it in enumerate(items, 1):
         print(f"@@AI is judging clip {i}/{len(items)}", flush=True)
         try:
-            it["ai"] = ask(model, it.get("lines") or it["text"], it["why"] + "; " + it.get("hint", ""), it["text"], url, game=game, pool=pool)
+            it["ai"] = ask(model, it.get("lines") or it["text"], it["why"] + "; " + it.get("hint", ""), it["text"], url, game=game, pool=pool,
+                         topic=it.get("topic", ""))
             finalize_tags(it["ai"], game, extra_tags)
         except urllib.error.HTTPError as e:
             if e.code == 404:
