@@ -124,6 +124,25 @@ CS.update({  # 0.5.0: dropdown lists, one-source rule, save next to the recordin
     "The clips go into a new folder named after the video (for example 'stream_clips'), right next to it - one folder per recording, so several streams never mix. Not used with a Twitch link.":
         "Klipy se uloží do nové složky pojmenované podle videa (například 'stream_clips'), hned vedle něj - jedna složka na záznam, takže se víc streamů nepomíchá. S odkazem na Twitch se nepoužije.",
 })
+CS.update({  # 0.5.6: proven hashtags, YouTube export import, hashtag insights
+    "Proven hashtags": "Osvědčené hashtagy",
+    "Hashtags that worked well for you, e.g. #funny #fail. Separate with spaces. TikTok, YouTube Shorts and Reels use them right after the game hashtag, up to two thirds of each post; the rest comes fresh from the AI so you keep learning what works. Needs the AI switch above.": "Hashtagy, které se ti osvědčily, např. #funny #fail. Odděl je mezerami. TikTok, YouTube Shorts i Reels je použijí hned za herním hashtagem, nejvýš ve dvou třetinách příspěvku; zbytek přijde čerstvý od AI, takže se dál učíš, co funguje. Vyžaduje zapnuté AI výše.",
+    "Import YouTube export": "Importovat export z YouTube", "Hashtag insights": "Rozbor hashtagů",
+    "{n} videos imported from YouTube.": "Z YouTube nahráno videí: {n}.",
+    "No YouTube data imported yet.": "Zatím není nahraný žádný export z YouTube.",
+    "Choose the YouTube export (CSV)": "Vyber export z YouTube (CSV)", "Import": "Import",
+    "This file does not look like the YouTube export (the columns video_id and zhlednuti are missing).": "Tento soubor nevypadá jako export z YouTube (chybí sloupce video_id a zhlednuti).",
+    "Imported {n} videos ({new} new, {upd} updated). Total: {tot} videos.": "Nahráno videí: {n} (nových {new}, aktualizovaných {upd}). Celkem: {tot}.",
+    "No YouTube data yet. Press \"Import YouTube export\" in the AI section first.": "Zatím žádná data z YouTube. Nejdřív v sekci AI klikni na \"Importovat export z YouTube\".",
+    "{used} of {total} videos used (older than {d} days).": "Použito {used} z {total} videí (starších než {d} dny).",
+    "Preliminary: with fewer than {m} videos these numbers are mostly luck. Use them as a hint, not as proof.": "Předběžné: s méně než {m} videi jsou tato čísla většinou náhoda. Ber je jako nápovědu, ne jako důkaz.",
+    "No hashtag is used in at least {k} videos and missing in at least {k} others yet, so nothing can be compared. Post videos with different hashtag sets.": "Zatím žádný hashtag není aspoň v {k} videích a zároveň chybí aspoň v {k} dalších, takže se nedá nic porovnat. Zveřejňuj videa s různými sadami hashtagů.",
+    "Hashtag": "Hashtag", "Videos": "Videí", "Median views": "Medián zhlédnutí", "vs. without": "oproti bez",
+    "Videos with a hashtag are compared with videos without it. A higher number does not prove that the hashtag caused it. Hashtags that were always used together get the same number.": "Videa s hashtagem se srovnávají s videi bez něj. Vyšší číslo nedokazuje, že za to může hashtag. Hashtagy, které se vždy používaly spolu, mají stejné číslo.",
+    "No hashtag is above the others yet.": "Zatím žádný hashtag nevyniká nad ostatními.",
+    "Replace your proven hashtags with the {n} best ones?": "Nahradit tvoje osvědčené hashtagy {n} nejlepšími?",
+    "Use the best as proven hashtags": "Použít nejlepší jako osvědčené", "Close": "Zavřít",
+})
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 
 

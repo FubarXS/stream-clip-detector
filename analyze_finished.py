@@ -21,6 +21,7 @@ def main():
     ap.add_argument("--llm", default="")
     ap.add_argument("--game", default="")
     ap.add_argument("--extra-tags", default="")
+    ap.add_argument("--proven-tags", default="")
     ap.add_argument("--tag-pool", type=int, default=50)
     ap.add_argument("--no-transcript-files", action="store_true", help="do not save the .srt subtitles / transcript text")
     ap.add_argument("--no-transcript-cache", action="store_true", help="always transcribe again")
@@ -54,7 +55,7 @@ def main():
         if any(not it["text"].strip() for it in new):
             print("   Some clips contain no recognized speech - the AI writes their texts from the game and the file name only.", flush=True)
         if talk and llm_judge.judge_all(args.llm, talk, game=args.game, extra_tags=args.extra_tags, pool=args.tag_pool):
-            llm_judge.adapt_all(args.llm, talk, args.game, args.extra_tags)
+            llm_judge.adapt_all(args.llm, talk, args.game, args.extra_tags, proven=args.proven_tags)
             for it in talk:
                 if it["ai"]:
                     it["links"] = llm_judge.links(it["ai"]["meme_terms"])

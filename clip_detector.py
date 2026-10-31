@@ -252,6 +252,7 @@ def main():
     ap.add_argument("--ai-scan", action="store_true", help="the AI also reads the whole transcript and names clip candidates")
     ap.add_argument("--game", default="", help="game being played (for hashtags)")
     ap.add_argument("--extra-tags", default="", help="your own hashtags added to every clip")
+    ap.add_argument("--proven-tags", default="", help="hashtags that worked well for you (used first, up to 2/3 of a post)")
     ap.add_argument("--tag-pool", type=int, default=50, help="how many hashtags the AI collects (General list)")
     ap.add_argument("--config", default="", help="JSON with keyword lists")
     ap.add_argument("--secret", default="", help="secret word = manual marker")
@@ -352,7 +353,7 @@ def main():
             it.update(peak=m, start=max(0, m - args.before), end=min(n, m + args.after))
 
     if use_ai and items:
-        llm_judge.adapt_all(args.llm, items, args.game, args.extra_tags)
+        llm_judge.adapt_all(args.llm, items, args.game, args.extra_tags, proven=args.proven_tags)
     import exports
     lines = []
     for i, it in enumerate(items, 1):

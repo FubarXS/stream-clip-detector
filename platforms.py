@@ -17,6 +17,7 @@ PLATFORMS = {
     "shorts": {"label": "YouTube Shorts", "rec": 30, "cap": 50, "title": 100, "must": ["#shorts"]},
     "reels": {"label": "Instagram Reels", "rec": 5, "cap": 5, "title": 0, "must": []},
 }
+PROVEN_SHARE = 2 / 3  # the user's proven hashtags fill at most this share of a post; the rest stays fresh from the AI
 ASK_MAX = 8  # the AI is asked for at most this many per platform (long lists make small models loop);
 #              build_all() tops the post up to "rec" from the General list
 
@@ -41,9 +42,10 @@ def _rules():
 RULES = _rules()
 
 
-def build_all(ai, game, extra, raw=None):
+def build_all(ai, game, extra, raw=None, proven=""):
     """Final per-platform title/description/hashtags: AI wording where usable, the rules enforced here."""
     pool, g, own = ai.get("hashtags", []), clean_tags([game]), clean_tags(extra.split())
+    mine = [t for t in clean_tags(proven.split(), 60) if t not in own]
     out = {}
     for key, p in PLATFORMS.items():
         r = raw.get(key) if isinstance(raw, dict) else None
@@ -54,6 +56,11 @@ def build_all(ai, game, extra, raw=None):
         tags = p["must"] + [t for t in tags if t not in p["must"] and t not in own]
         if g and g[0] not in tags:
             tags.insert(len(p["must"]), g[0])
+        if mine:  # proven hashtags: right after the must-tags and the game tag, at most PROVEN_SHARE of the post
+            lead = p["must"] + g[:1]
+            room = max(1, p["rec"] - len(own)) - len(lead)
+            top = [t for t in mine if t not in lead][: max(0, int(room * PROVEN_SHARE))]
+            tags = lead + top + [t for t in tags if t not in lead and t not in top]
         tags = tags[: max(1, p["rec"] - len(own))] + own  # the streamer's own tags are always kept
         title = str(r.get("title") or ai.get("title", ""))[: p["title"]] if p["title"] else ""
         desc = str(r.get("description") or ai.get("description") or ai.get("why", ""))[:2000]

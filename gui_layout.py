@@ -202,6 +202,18 @@ class LayoutMixin:
         self.entry(ai, "Always add these hashtags", "extra_tags", None,
                    "Your own hashtags for every clip, e.g. #yourchannel. Separate with spaces. They are added at the "
                    "end of the list.")
+        self.entry(ai, "Proven hashtags", "proven_tags", None,
+                   "Hashtags that worked well for you, e.g. #funny #fail. Separate with spaces. TikTok, YouTube Shorts and "
+                   "Reels use them right after the game hashtag, up to two thirds of each post; the rest comes fresh from "
+                   "the AI so you keep learning what works. Needs the AI switch above.")
+        hrow = ctk.CTkFrame(ai, fg_color="transparent")
+        hrow.pack(fill="x", padx=16, pady=(0, 2))
+        FitButton(hrow, text="Import YouTube export", width=150, height=30, command=self.import_stats, **BTN2).pack(side="left")
+        FitButton(hrow, text="Hashtag insights", width=120, height=30, command=self.show_insights, **BTN2).pack(side="left", padx=(8, 0))
+        self.stats_lbl = ctk.CTkLabel(ai, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
+                                      wraplength=380, anchor="w")
+        self.stats_lbl.pack(anchor="w", padx=16, pady=(2, 4))
+        self.render_stats()
         self.slider(ai, "Minimum funny rating", "min_funny", 1, 9, 1,
                     "Only clips the AI rates at least this high (out of 10) are kept. With AI on, a wider pool of "
                     "candidates is checked than normal.")

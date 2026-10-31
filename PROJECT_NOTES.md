@@ -29,6 +29,8 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
 | `llm_scan.py` | Optional: the AI reads the transcript in ~5 min pieces and names clip candidates that loudness and trigger words missed (`--ai-scan`) |
 | `llm_parse.py` | Tolerant reading of the AI reply (JSON in a fence, "8/10", hashtags as one string, cut-off answers) |
+| `hashtag_stats.py` | Reads the YouTube Studio CSV export (made by the Tampermonkey script in `tools/`), keeps the videos in `youtube_stats.json` in `DATA`, ranks hashtags by median views with vs. without (no window code) |
+| `gui_insights.py` | "Import YouTube export" button and the "Hashtag insights" window (can copy the best hashtags into "Proven hashtags") |
 | `platforms.py` | Per-platform rules (hashtag counts, title length) and text building; the AI prompt for the platform texts is built from the same table |
 | `tools/analyze_hashtags.py` | Separate command-line script (not used by the window): reads CSV exports from YouTube Studio and reports which hashtags go with more views |
 | `analyze_finished.py` | Analysis of already finished clips |
@@ -71,6 +73,9 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
   and drops times that are not in the piece it was shown (invented). The reason is added to a clip's `why` only AFTER judging,
   so the judge is not told "the AI picked this". Costs about one model call per 5 minutes of speech (3 h stream = ~40 calls).
   Not cached yet: running the analysis again repeats the scan.
+- Proven hashtags (`proven_tags`, `--proven-tags`): used for every platform right after the must-tags and the game hashtag, at most `PROVEN_SHARE` (2/3) of a post,
+  so a third stays fresh from the AI. Empty = nothing changes. The insights window never changes the hashtags by itself; it only copies hashtags into this field.
+- The last folder of the video, finished-clip and YouTube-export file windows is remembered separately (`video_dir`, `clips_dir`, `stats_dir` in the settings).
 - The AI texts are optional: with the switch off the log says so and gallery cards say "AI was off or failed" instead of an empty title.
 - Icons: `make_icon.py` makes two glyphs - the detailed clapperboard (>= 64 px) and a fat one with 4 stripes for 16-48 px - and writes
   `app.ico` with one hand-made picture per size (16, 20, 24, 32, 40, 48, 64, 128, 256; Windows asks for 20/24/40 at 125/150/250 %).

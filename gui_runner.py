@@ -92,7 +92,8 @@ class RunnerMixin:
             if finished:
                 self.exec([*worker_cmd("analyze_finished"), *finished, "--model", cfg["model"],
                            "--lang", cfg["lang"], "--device", cfg["device"], "--llm", cfg["llm_model"],
-                           "--game", cfg["game"], "--extra-tags", cfg["extra_tags"], "--tag-pool", cfg["tag_pool"],
+                           "--game", cfg["game"], "--extra-tags", cfg["extra_tags"], "--proven-tags", cfg["proven_tags"],
+                           "--tag-pool", cfg["tag_pool"],
                            "--out", cfg["out"], *self.save_flags(cfg)])
                 return
             video = cfg["video"]
@@ -140,6 +141,8 @@ class RunnerMixin:
                     cmd += ["--game", cfg["game"]]
                 if cfg["extra_tags"]:
                     cmd += ["--extra-tags", cfg["extra_tags"]]
+                if cfg["proven_tags"]:
+                    cmd += ["--proven-tags", cfg["proven_tags"]]
             if not cfg["loud_on"]:
                 cmd.append("--no-loudness")
             if not cfg["whisper"]:
@@ -165,10 +168,11 @@ class RunnerMixin:
         if self.running:
             messagebox.showinfo(self.tr("Busy"), self.tr("An analysis is already running. Wait for it to finish or press Stop."))
             return
-        files = filedialog.askopenfilenames(parent=self,
+        files = filedialog.askopenfilenames(parent=self, initialdir=self.start_dir("clips"),
                                             filetypes=[("Video", "*.mp4 *.mkv *.mov *.webm"), ("All", "*.*")])
         if not files:
             return
+        self.dirs["clips"] = os.path.dirname(files[0])
         game = ask_text(self, self.tr("Which game?"), self.tr("Which game are these clips from? It is used for the game "
                         "hashtags. Leave it empty if you do not want game hashtags."), self.vars["game"].get(),
                         ok=self.tr("OK"), cancel=self.tr("Cancel"))

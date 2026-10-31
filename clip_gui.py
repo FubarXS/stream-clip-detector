@@ -21,6 +21,7 @@ except ImportError:
 
 import exports
 from brand import ACCENT
+from gui_insights import InsightsMixin
 from gui_config import CFG, DATA, DEFAULTS, DEVICES, FORMATS, LANGS, MODELS, NUM
 from gui_layout import LayoutMixin
 from gui_widgets import Blocks, Tip
@@ -29,7 +30,7 @@ from gui_runner import RunnerMixin
 from gui_source import SourceMixin
 
 
-class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
+class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, InsightsMixin, ctk.CTk):
     def __init__(self):
         super().__init__()
         ctk.set_appearance_mode("dark")
@@ -50,7 +51,9 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
         except Exception:
             pass
         V = self.vars = {}
-        for k in ("video", "url", "out", "secret", "llm_model", "game", "extra_tags", "audio_track", "clips_view"):
+        # last folder of each file window; the recording and the finished clips are remembered separately
+        self.dirs = {k: str(cfg.get(k + "_dir", "")) for k in ("video", "clips", "stats")}
+        for k in ("video", "url", "out", "secret", "llm_model", "game", "extra_tags", "audio_track", "clips_view", "proven_tags"):
             V[k] = tk.StringVar(value=str(cfg[k]))
         for k in NUM:
             try:
@@ -81,10 +84,17 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
         c = [len(self.words(k)) for k in ("kw_en", "kw_cs", "kw_strong")]
         self.kw_info.configure(text=f"English: {c[0]} · Other: {c[1]} · Strong: {c[2]}   (one per line)")
 
+    def start_dir(self, key):
+        """Folder where a file window opens: the last one used for THIS purpose (None = let Windows decide)."""
+        d = self.dirs.get(key, "")
+        return d if d and os.path.isdir(d) else None
+
     def pick_video(self):
-        p = filedialog.askopenfilename(filetypes=[("Video", "*.mp4 *.mkv *.flv *.mov *.ts"), ("All", "*.*")])
+        p = filedialog.askopenfilename(initialdir=self.start_dir("video"),
+                                       filetypes=[("Video", "*.mp4 *.mkv *.flv *.mov *.ts"), ("All", "*.*")])
         if p:
             self.vars["video"].set(p)
+            self.dirs["video"] = os.path.dirname(p)
 
     def pick_clips_folder(self):
         """Clips tab: load the clips (with their info files) of any folder."""
@@ -95,7 +105,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
             self.load_clips()
 
     def pick_out(self):
-        p = filedialog.askdirectory()
+        p = filedialog.askdirectory(initialdir=self.vars["out"].get() or None)
         if p:
             self.vars["out"].set(p)
 
@@ -118,10 +128,10 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
             "device": DEVICES[self.dev_name.get()], "whisper": v["whisper"].get(), "cut": v["cut"].get(),
             "save_transcript": v["save_transcript"].get(), "save_info": v["save_info"].get(),
             "reuse_transcript": v["reuse_transcript"].get(), "clip_format": FORMATS[self.fmt_name.get()],
-            "clips_view": v["clips_view"].get(),
+            "clips_view": v["clips_view"].get(), **{k + "_dir": d for k, d in self.dirs.items()},
             "secret": v["secret"].get().strip(), "secret_back": i("secret_back"),
             "audio_track": v["audio_track"].get(), "tag_pool": i("tag_pool"),
-            "ui_lang": self.lang, "game": v["game"].get().strip(), "extra_tags": v["extra_tags"].get().strip(),
+            "ui_lang": self.lang, "game": v["game"].get().strip(), "extra_tags": v["extra_tags"].get().strip(), "proven_tags": v["proven_tags"].get().strip(),
             "llm_on": v["llm_on"].get(), "ai_scan": v["ai_scan"].get(), "llm_model": v["llm_model"].get().strip(), "min_funny": i("min_funny"),
             **{k: "\n".join(self.words(k)) for k in ("kw_en", "kw_cs", "kw_strong")},
         }
@@ -178,6 +188,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, ctk.CTk):
         else:
             self.clips_dirty = True  # rebuilt in the new language when the tab is opened
         self.render_models()
+        self.render_stats()
 
     def set_lang(self, choice):
         self.apply_language("cs" if choice == "Čeština" else "en")

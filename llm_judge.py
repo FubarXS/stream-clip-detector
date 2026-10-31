@@ -168,7 +168,7 @@ def _chat(model, system, user, url=URL, timeout=300):
     return parse.load_reply(_chat_raw(model, system, user, url, timeout))
 
 
-def adapt_all(model, items, game="", extra_tags="", url=URL):
+def adapt_all(model, items, game="", extra_tags="", url=URL, proven=""):
     """A second, short AI call per clip: texts and hashtags written for TikTok, YouTube Shorts and Reels."""
     import platforms
     todo, down = [it for it in items if it.get("ai")], False
@@ -185,6 +185,6 @@ def adapt_all(model, items, game="", extra_tags="", url=URL):
                     down = True
                 except Exception:
                     raw = None
-            a["platforms"] = platforms.build_all(a, game, extra_tags, raw)
+            a["platforms"] = platforms.build_all(a, game, extra_tags, raw, proven)
     finally:
         unload(model, url)
