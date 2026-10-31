@@ -75,5 +75,5 @@ WHY = {
     "secret_back": "45 s is long enough to include whatever just happened before you said the phrase.",
     "loud_db": "6 dB is where a sound is clearly louder than normal speech level; lower picks up ordinary variation.",
     "min_funny": "5/10 keeps clips the AI finds at least moderately funny.",
-    "tag_pool": "50 gives you a big list to choose from in the General tab. The platform tabs use only the recommended number anyway.",
+    "tag_pool": "50 gives you a big list to choose from in the General tab. TikTok and Reels use 5 of them, YouTube Shorts up to 30.",
 }

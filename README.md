@@ -43,7 +43,7 @@ Prefer not to run an exe at all? Use the Python install above - it has no warnin
 - Analyze your **local OBS recording** if you can: better quality than a Twitch VOD, and if your microphone is on its own audio track
   you can pick that track (**Audio track for analysis**) so the game sound does not count as your reaction.
 - Run the analysis when you are not streaming or gaming - it uses the GPU.
-- Hashtag counts per platform come from third-party 2026 guides, not official documents. You can change them in `platforms.py`.
+- Hashtag counts per platform: the YouTube limit (60) and the Instagram limit (5) are from the official platform pages; the TikTok count is from third-party guides and not verified. You can change them in `platforms.py`.
 
 ## Good to know
 - Only analyze and download content you have the rights to. Respect the Terms of Service of the platforms.

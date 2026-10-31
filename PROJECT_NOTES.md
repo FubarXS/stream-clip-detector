@@ -29,7 +29,8 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
 | `llm_scan.py` | Optional: the AI reads the transcript in ~5 min pieces and names clip candidates that loudness and trigger words missed (`--ai-scan`) |
 | `llm_parse.py` | Tolerant reading of the AI reply (JSON in a fence, "8/10", hashtags as one string, cut-off answers) |
-| `platforms.py` | Per-platform rules (hashtag counts, title length) and text building |
+| `platforms.py` | Per-platform rules (hashtag counts, title length) and text building; the AI prompt for the platform texts is built from the same table |
+| `tools/analyze_hashtags.py` | Separate command-line script (not used by the window): reads CSV exports from YouTube Studio and reports which hashtags go with more views |
 | `analyze_finished.py` | Analysis of already finished clips |
 | `transcript_cache.py` | Saves/reuses the Whisper transcript per recording in `<out>/cache/` |
 | `exports.py` | Thumbnails, `.srt`, `posts.txt`, `*_info.txt` per clip |
@@ -111,5 +112,7 @@ with a function returning fake segments (Whisper models are not needed to test t
 - The packaged Windows app is built by GitHub Actions and was only tested on Linux (build, helper mode, window start); the sound
   of the in-app player needs ffplay (bundled in the Windows zip; for a source install it comes with the ffmpeg download).
 - Each stream analysis rewrites `results.json` in its output folder (use a folder per stream).
-- Hashtag recommendations are an AI estimate shaped by third-party guides; no live trend data.
+- Hashtag recommendations are an AI estimate; no live trend data. Limits: YouTube ignores ALL hashtags above 60 (YouTube Help), Instagram allows 5 since Dec 2025;
+  the TikTok number is from third-party guides and not verified. Shorts get 30 of the General list (`rec` in `platforms.py`); that number is a choice, not proven to add reach.
+  `tools/analyze_hashtags.py` needs roughly 15+ videos with different hashtag sets before it says anything useful.
 - Not tested on macOS/Linux; the window is developed for Windows.

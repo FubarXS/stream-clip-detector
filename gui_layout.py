@@ -206,8 +206,8 @@ class LayoutMixin:
                     "Only clips the AI rates at least this high (out of 10) are kept. With AI on, a wider pool of "
                     "candidates is checked than normal.")
         self.slider(ai, "Hashtag pool size", "tag_pool", 15, 50, 5,
-                    "How many hashtags the AI collects in the General tab - a big list to pick from. TikTok, YouTube Shorts "
-                    "and Reels use far fewer (more hashtags do not add reach there).")
+                    "How many hashtags the AI collects in the General tab - a big list to pick from. TikTok and Reels use "
+                    "5 of them, YouTube Shorts up to 30 (YouTube ignores hashtags above 60).")
         ctk.CTkFrame(ai, height=8, fg_color="transparent").pack()
 
     def build_right(self, right, cfg):

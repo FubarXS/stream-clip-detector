@@ -49,8 +49,8 @@ CS = {
     "Which game?": "Jaká hra?", "OK": "OK", "Cancel": "Zrušit",
     "Which game are these clips from? It is used for the game hashtags. Leave it empty if you do not want game hashtags.": "Z jaké hry jsou tyto klipy? Použije se pro hashtagy ke hře. Nech prázdné, když hashtagy ke hře nechceš.",
     "Hashtag pool size": "Velikost seznamu hashtagů",
-    "How many hashtags the AI collects in the General tab - a big list to pick from. TikTok, YouTube Shorts and Reels use far fewer (more hashtags do not add reach there).": "Kolik hashtagů AI nasbírá v záložce General - velký seznam k výběru. TikTok, YouTube Shorts a Reels používají mnohem míň (víc hashtagů tam dosah nezvyšuje).",
-    "50 gives you a big list to choose from in the General tab. The platform tabs use only the recommended number anyway.": "50 ti dá velký seznam k výběru v záložce General. Záložky platforem stejně používají jen doporučený počet.",
+    "How many hashtags the AI collects in the General tab - a big list to pick from. TikTok and Reels use 5 of them, YouTube Shorts up to 30 (YouTube ignores hashtags above 60).": "Kolik hashtagů AI nasbírá v záložce General - velký seznam k výběru. TikTok a Reels jich použijí 5, YouTube Shorts až 30 (YouTube ignoruje hashtagy nad 60).",
+    "50 gives you a big list to choose from in the General tab. TikTok and Reels use 5 of them, YouTube Shorts up to 30.": "50 ti dá velký seznam k výběru v záložce General. TikTok a Reels jich použijí 5, YouTube Shorts až 30.",
     "Measure my loudness": "Změřit mou hlasitost", "Measure": "Změřit", "Use suggestion": "Použít návrh",
     "Enjoying the app? Support it on Ko-fi": "Líbí se ti program? Podpoř ho na Ko-fi",
     "Analyzes the loudness of the selected recording and shows how loud your normal voice is compared with your loudest moments, so you can match the setting to your microphone. Tip: pick a recording that contains some of your yelps. Takes a minute or two for a long video.":
