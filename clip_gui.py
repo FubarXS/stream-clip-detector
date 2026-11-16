@@ -60,7 +60,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, InsightsMixin, ctk.CTk)
                 V[k] = tk.DoubleVar(value=float(cfg[k]))
             except Exception:
                 V[k] = tk.DoubleVar(value=float(DEFAULTS[k]))
-        for k in ("whisper", "cut", "loud_on", "llm_on", "ai_scan", "save_transcript", "save_info", "reuse_transcript", "out_beside"):
+        for k in ("whisper", "cut", "loud_on", "llm_on", "ai_scan", "save_transcript", "save_info", "reuse_transcript", "out_beside", "auto_tags"):
             V[k] = tk.BooleanVar(value=bool(cfg[k]))
         pick = lambda d, v, default: next((n for n, c in d.items() if c == v), default)
         self.model_name = tk.StringVar(value=pick(MODELS, cfg["model"], "Balanced"))
@@ -132,7 +132,7 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, InsightsMixin, ctk.CTk)
             "secret": v["secret"].get().strip(), "secret_back": i("secret_back"),
             "audio_track": v["audio_track"].get(), "tag_pool": i("tag_pool"),
             "ui_lang": self.lang, "game": v["game"].get().strip(), "extra_tags": v["extra_tags"].get().strip(), "proven_tags": v["proven_tags"].get().strip(),
-            "llm_on": v["llm_on"].get(), "ai_scan": v["ai_scan"].get(), "llm_model": v["llm_model"].get().strip(), "min_funny": i("min_funny"),
+            "llm_on": v["llm_on"].get(), "auto_tags": v["auto_tags"].get(), "ai_scan": v["ai_scan"].get(), "llm_model": v["llm_model"].get().strip(), "min_funny": i("min_funny"),
             **{k: "\n".join(self.words(k)) for k in ("kw_en", "kw_cs", "kw_strong")},
         }
 
@@ -179,16 +179,15 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, InsightsMixin, ctk.CTk)
         self.set_run_button(self.running)
         if not self.running:
             self.status.configure(text=self.tr("Ready"))
-        names = [self.tr("Analysis"), self.tr("Clips")]
-        self.view_seg.configure(values=names)
-        self.view_seg.set(names[1 if self.view_name == "Clips" else 0])
+        self.view_seg.configure(values=[self.tr(v) for v in self.VIEWS])
+        self.view_seg.set(self.tr(self.view_name))
         self.clips_panel.relabel()
         if self.view_name == "Clips":
             self.clips_panel.refresh(self.clips_panel.items)
         else:
             self.clips_dirty = True  # rebuilt in the new language when the tab is opened
         self.render_models()
-        self.render_stats()
+        self.render_stats()  # the Stats tab and the game hint
 
     def set_lang(self, choice):
         self.apply_language("cs" if choice == "Čeština" else "en")
@@ -310,6 +309,10 @@ class App(LayoutMixin, Blocks, RunnerMixin, SourceMixin, InsightsMixin, ctk.CTk)
         self.load_clips(switch=True, quiet=quiet)
 
     def on_close(self):
+        try:
+            self.stats_panel.remember_game()  # the game of this session joins the list of known games
+        except Exception:
+            pass
         self.save_cfg()
         self.save_items()
         self.kill()

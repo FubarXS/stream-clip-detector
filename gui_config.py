@@ -25,6 +25,7 @@ def _data_dir():
 
 
 DATA = _data_dir()
+STATS = os.path.join(DATA, "youtube_stats.json")  # the imported YouTube videos (and their games), kept between starts
 CFG = os.path.join(DATA, "gui_settings.json")
 _OLD = os.path.join(HERE, "gui_settings.json")  # where versions up to 0.5.1 kept it
 if DATA != HERE and not os.path.exists(CFG) and os.path.exists(_OLD):
@@ -61,7 +62,7 @@ DEFAULTS = {
     "save_transcript": True, "save_info": True, "reuse_transcript": True,
     "clip_format": "mp4", "clips_view": "list",
     "secret": "clip that", "secret_back": "45", "audio_track": "1",
-    "ui_lang": "en", "game": "", "extra_tags": "", "proven_tags": "", "llm_on": False, "ai_scan": False, "llm_model": "gemma3:12b", "min_funny": "5", "tag_pool": "50",
+    "ui_lang": "en", "game": "", "extra_tags": "", "proven_tags": "", "auto_tags": False, "llm_on": False, "ai_scan": False, "llm_model": "gemma3:12b", "min_funny": "5", "tag_pool": "50",
     "kw_en": "\n".join(keywords.KEYWORDS_EN), "kw_cs": "\n".join(keywords.KEYWORDS_CS), "kw_strong": "",
 }
 

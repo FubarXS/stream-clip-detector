@@ -8,7 +8,7 @@ The window never does heavy work itself: it starts helper programs as separate p
 | File | Role |
 |---|---|
 | `clip_gui.py` | Main window: settings, language, clips list loading/saving |
-| `gui_layout.py` | Window layout (Analysis tab, Clips tab switch, header, bar, footer) |
+| `gui_layout.py` | Window layout (Stats / Analysis / Clips tab switch, Analysis tab, header, bar, footer) |
 | `gui_gallery.py` | Gallery view of the Clips tab (compact cards, "Edit" opens the full card in a window) |
 | `gui_player.py` | In-app clip player: ffmpeg pictures + ffplay sound, no extra Python packages |
 | `app_main.py`, `stream_clip_detector.spec` | Entry point and PyInstaller recipe of the Windows app (`--worker <module>` = helper mode) |
@@ -29,8 +29,9 @@ The window never does heavy work itself: it starts helper programs as separate p
 | `llm_judge.py` | Optional AI step via Ollama (rating, texts, hashtags, platform adaptation) |
 | `llm_scan.py` | Optional: the AI reads the transcript in ~5 min pieces and names clip candidates that loudness and trigger words missed (`--ai-scan`) |
 | `llm_parse.py` | Tolerant reading of the AI reply (JSON in a fence, "8/10", hashtags as one string, cut-off answers) |
-| `hashtag_stats.py` | Reads the YouTube Studio CSV export (made by the Tampermonkey script in `tools/`), keeps the videos in `youtube_stats.json` in `DATA`, ranks hashtags by median views with vs. without (no window code) |
-| `gui_insights.py` | "Import YouTube export" button and the "Hashtag insights" window (can copy the best hashtags into "Proven hashtags") |
+| `hashtag_stats.py` | Reads the YouTube Studio CSV export (made by the Tampermonkey script in `tools/`), keeps the videos, their games and the date of the last import in `youtube_stats.json` in `DATA`, ranks hashtags by median views with vs. without (overall or per game), marks game hashtags, `best()` = hashtags to use for a game, `overview()` = view sources / weekday / length (no window code) |
+| `gui_stats.py` | The Stats tab: YouTube data, hashtag settings (own, proven, pool size, automatic), strongest hashtags per game, ranking, channel overview, video list with a game per video |
+| `gui_insights.py` | "Import YouTube export" (file window + merge) and the hint line under "Game being played" in the Analysis tab |
 | `platforms.py` | Per-platform rules (hashtag counts, title length) and text building; the AI prompt for the platform texts is built from the same table |
 | `tools/analyze_hashtags.py` | Separate command-line script (not used by the window): reads CSV exports from YouTube Studio and reports which hashtags go with more views |
 | `analyze_finished.py` | Analysis of already finished clips |
@@ -75,6 +76,12 @@ The Clips tab reads the JSON files; favorites and typed edits are written back i
   Not cached yet: running the analysis again repeats the scan.
 - Proven hashtags (`proven_tags`, `--proven-tags`): used for every platform right after the must-tags and the game hashtag, at most `PROVEN_SHARE` (2/3) of a post,
   so a third stays fresh from the AI. Empty = nothing changes. The insights window never changes the hashtags by itself; it only copies hashtags into this field.
+- Stats tab (0.6.0): the hashtag settings moved out of the AI card; "Game being played" moved to the Source card (it changes per recording).
+  Videos of the YouTube import get a game (guessed from title/hashtags with `guess_game`, or typed by hand; a re-import keeps it).
+  A hashtag is a *game hashtag* when >= 80 % of the videos that use it belong to one game and >= 3 other videos exist (`tag_games`);
+  `best(store, game)` = strong hashtags of that game + strong general ones, never the game hashtags of other games.
+  "Add the best hashtags for the game automatically" (`auto_tags`, off by default, needs the AI switch) appends `best()` to the proven hashtags
+  for THAT RUN only (`RunnerMixin.with_auto_tags`); the proven-hashtags field itself is never changed by it. The import survives restarts.
 - The last folder of the video, finished-clip and YouTube-export file windows is remembered separately (`video_dir`, `clips_dir`, `stats_dir` in the settings).
 - The AI texts are optional: with the switch off the log says so and gallery cards say "AI was off or failed" instead of an empty title.
 - Icons: `make_icon.py` makes two glyphs - the detailed clapperboard (>= 64 px) and a fat one with 4 stripes for 16-48 px - and writes
@@ -117,7 +124,7 @@ with a function returning fake segments (Whisper models are not needed to test t
 - The packaged Windows app is built by GitHub Actions and was only tested on Linux (build, helper mode, window start); the sound
   of the in-app player needs ffplay (bundled in the Windows zip; for a source install it comes with the ffmpeg download).
 - Each stream analysis rewrites `results.json` in its output folder (use a folder per stream).
-- Hashtag recommendations are an AI estimate; no live trend data. Limits: YouTube ignores ALL hashtags above 60 (YouTube Help), Instagram allows 5 since Dec 2025;
+- Hashtag recommendations are an AI estimate; no live trend data. The Stats tab ranking needs about 15 videos (and 3 with and 3 without a hashtag) before it says anything; per game even more. Limits: YouTube ignores ALL hashtags above 60 (YouTube Help), Instagram allows 5 since Dec 2025;
   the TikTok number is from third-party guides and not verified. Shorts get 30 of the General list (`rec` in `platforms.py`); that number is a choice, not proven to add reach.
   `tools/analyze_hashtags.py` needs roughly 15+ videos with different hashtag sets before it says anything useful.
 - Not tested on macOS/Linux; the window is developed for Windows.

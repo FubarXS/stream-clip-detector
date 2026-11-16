@@ -30,3 +30,5 @@ Thumbs.db
 build/
 dist/
 *.zip
+youtube_stats.json
+youtube_stats.json.tmp

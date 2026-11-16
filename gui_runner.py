@@ -10,6 +10,7 @@ import traceback
 from tkinter import filedialog, messagebox
 
 from gui_dialogs import ask_text
+import hashtag_stats as hs
 
 from gui_config import NOWIN, LOWPRI, DATA, HERE, worker_cmd
 
@@ -31,7 +32,8 @@ class RunnerMixin:
         if not finished and cfg["video"] and cfg["url"]:
             messagebox.showwarning(self.tr("Two sources"), self.tr("Both a file and a link are filled in. Clear one of them."))
             return
-        self.save_cfg(cfg)
+        self.save_cfg(cfg)  # the settings as the user typed them; the automatic hashtags are only added for this run
+        cfg = self.with_auto_tags(cfg, bool(finished))
         self.cancel, self.running, self.t0, self.status_text = False, True, time.time(), "Starting..."
         self.last_out = time.time()
         self.measuring, self.finished_run = measure, bool(finished)
@@ -79,6 +81,21 @@ class RunnerMixin:
                     self.q.put(("status", line))
                 self.q.put(("log", line + "\n"))
         return self.proc.wait()
+
+    def with_auto_tags(self, cfg, finished=False):
+        """With 'Add the best hashtags for the game automatically' on: the strong hashtags of the game (and the strong general
+        ones) come after the user's own proven hashtags, for this run only."""
+        try:
+            self.stats_panel.remember_game()
+            if not (cfg["auto_tags"] and (cfg["llm_on"] or finished) and cfg["llm_model"]):
+                return cfg
+            mine = cfg["proven_tags"].split()
+            auto = [t for t in hs.best(self.stats_panel.store, cfg["game"]) if t.lower() not in {m.lower() for m in mine}]
+        except Exception:  # the statistics must never stop an analysis
+            return cfg
+        if auto:
+            self.q.put(("log", self.tr("Hashtags from your statistics:") + " " + " ".join(auto) + "\n"))
+        return {**cfg, "proven_tags": " ".join(mine + auto)}
 
     @staticmethod
     def save_flags(cfg):

@@ -6,6 +6,7 @@ import customtkinter as ctk
 from brand import (BG, PANEL_BORDER, BORDER, BORDER_H, TEXT, MUTED, DIM, ACCENT, RADIUS_LG, KOFI_URL, VERSION,
                    BTN2, OPTION, COMBO, ENTRY, BOX, SEG, TABS, SWITCH, SLIDER, BrandButton, image, window_icon)
 from gui_clips import ClipsPanel
+from gui_stats import StatsPanel
 from gui_config import MODELS, LANGS, DEVICES, FORMATS
 import ollama_models
 from gui_widgets import FitButton, Tip
@@ -28,26 +29,32 @@ class LayoutMixin:
         right.grid(row=1, column=1, sticky="nsew", padx=(6, 14))
         self.build_right(right, cfg)
         self.clips_panel = ClipsPanel(self, self)
+        self.stats_panel = StatsPanel(self, self)
+        self.update_game_hint()
         self.build_bar()
         self.build_footer()
 
+    VIEWS = ("Stats", "Analysis", "Clips")  # the tab bar, left to right (English keys)
+
     def set_view(self, name):
-        """Switch between the Analysis tab and the Clips tab (inside this one window)."""
+        """Switch between the Stats, Analysis and Clips tabs (inside this one window)."""
         self.view_name = name
+        for w in (self.left, self.right, self.clips_panel, self.stats_panel):
+            w.grid_remove()
         if name == "Clips":
             if self.clips_dirty:  # the cards are built only when the tab is opened (faster start)
                 self.load_clips()
-            self.left.grid_remove()
-            self.right.grid_remove()
             self.clips_panel.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=14)
+        elif name == "Stats":
+            self.stats_panel.on_show()
+            self.stats_panel.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=14)
         else:
-            self.clips_panel.grid_remove()
             self.left.grid()
             self.right.grid()
         self.view_seg.set(self.tr(name))
 
     def show_view(self, choice):
-        self.set_view(("Analysis", "Clips")[self.view_seg.cget("values").index(choice)])
+        self.set_view(self.VIEWS[self.view_seg.cget("values").index(choice)])
 
     def refresh_models(self):
         """Ask Ollama and the GPU in a background thread (nvidia-smi can take seconds); poll() shows the answer."""
@@ -87,7 +94,7 @@ class LayoutMixin:
         ctk.CTkLabel(head, text="Finds the best moments in your stream recordings. Free and runs on your PC.",
                      text_color=MUTED).pack(anchor="w", pady=(2, 0))
         self.view_name = "Analysis"
-        self.view_seg = ctk.CTkSegmentedButton(head, values=[self.tr("Analysis"), self.tr("Clips")], command=self.show_view,
+        self.view_seg = ctk.CTkSegmentedButton(head, values=[self.tr(v) for v in self.VIEWS], command=self.show_view,
                                                height=46, font=ctk.CTkFont(size=15, weight="bold"), **SEG)
         self.view_seg.set(self.tr("Analysis"))
         self.view_seg.pack(fill="x", pady=(12, 0))  # full-width tab bar
@@ -105,6 +112,13 @@ class LayoutMixin:
         self.source_hint = ctk.CTkLabel(src, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
                                         wraplength=380, anchor="w")
         self.source_hint.pack(anchor="w", padx=16)
+        self.entry(src, "Game being played", "game", None,
+                   "The game in this recording, e.g. Project Zomboid. The AI adds hashtags for the game, its genre "
+                   "and its community.")
+        self.game_hint = ctk.CTkLabel(src, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
+                                      wraplength=380, anchor="w")
+        self.game_hint.pack(anchor="w", padx=16, pady=(0, 2))
+        self.vars["game"].trace_add("write", lambda *_: self.update_game_hint())
         self.entry(src, "Save clips to", "out", self.pick_out, "Folder where the clips and clips.txt are saved.")
         self.beside_sw = ctk.CTkSwitch(src, text="Save clips next to the recording", variable=self.vars["out_beside"], **SWITCH)
         self.beside_sw.pack(anchor="w", padx=16, pady=(6, 14))
@@ -196,30 +210,11 @@ class LayoutMixin:
                                        wraplength=380, anchor="w")
         self.models_lbl.pack(anchor="w", padx=16, pady=(2, 4))
         self.after(700, self.refresh_models)
-        self.entry(ai, "Game being played", "game", None,
-                   "The game in this recording, e.g. Project Zomboid. The AI adds hashtags for the game, its genre "
-                   "and its community.")
-        self.entry(ai, "Always add these hashtags", "extra_tags", None,
-                   "Your own hashtags for every clip, e.g. #yourchannel. Separate with spaces. They are added at the "
-                   "end of the list.")
-        self.entry(ai, "Proven hashtags", "proven_tags", None,
-                   "Hashtags that worked well for you, e.g. #funny #fail. Separate with spaces. TikTok, YouTube Shorts and "
-                   "Reels use them right after the game hashtag, up to two thirds of each post; the rest comes fresh from "
-                   "the AI so you keep learning what works. Needs the AI switch above.")
-        hrow = ctk.CTkFrame(ai, fg_color="transparent")
-        hrow.pack(fill="x", padx=16, pady=(0, 2))
-        FitButton(hrow, text="Import YouTube export", width=150, height=30, command=self.import_stats, **BTN2).pack(side="left")
-        FitButton(hrow, text="Hashtag insights", width=120, height=30, command=self.show_insights, **BTN2).pack(side="left", padx=(8, 0))
-        self.stats_lbl = ctk.CTkLabel(ai, text="", text_color=MUTED, font=ctk.CTkFont(size=11), justify="left",
-                                      wraplength=380, anchor="w")
-        self.stats_lbl.pack(anchor="w", padx=16, pady=(2, 4))
-        self.render_stats()
         self.slider(ai, "Minimum funny rating", "min_funny", 1, 9, 1,
                     "Only clips the AI rates at least this high (out of 10) are kept. With AI on, a wider pool of "
                     "candidates is checked than normal.")
-        self.slider(ai, "Hashtag pool size", "tag_pool", 15, 50, 5,
-                    "How many hashtags the AI collects in the General tab - a big list to pick from. TikTok and Reels use "
-                    "5 of them, YouTube Shorts up to 30 (YouTube ignores hashtags above 60).")
+        ctk.CTkLabel(ai, text="Hashtag settings (your own, proven, pool size) are in the Stats tab.", text_color=MUTED,
+                     font=ctk.CTkFont(size=11), justify="left", wraplength=380, anchor="w").pack(anchor="w", padx=16, pady=(6, 0))
         ctk.CTkFrame(ai, height=8, fg_color="transparent").pack()
 
     def build_right(self, right, cfg):

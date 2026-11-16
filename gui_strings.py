@@ -143,6 +143,53 @@ CS.update({  # 0.5.6: proven hashtags, YouTube export import, hashtag insights
     "Replace your proven hashtags with the {n} best ones?": "Nahradit tvoje osvědčené hashtagy {n} nejlepšími?",
     "Use the best as proven hashtags": "Použít nejlepší jako osvědčené", "Close": "Zavřít",
 })
+CS.update({  # 0.6.0: Stats tab, games, automatic hashtags
+    "Stats": "Statistiky", "All games": "Všechny hry", "YouTube data": "Data z YouTube", "Get the export script": "Získat skript pro export",
+    "Your videos from YouTube Studio. Made by the Tampermonkey script in the tools folder of the project. The import is saved, so the program remembers it the next time you start it.":
+        "Tvoje videa z YouTube Studia. Vytváří je skript pro Tampermonkey ve složce tools projektu. Import se ukládá, takže si ho program při dalším spuštění pamatuje.",
+    "Hashtags": "Hashtagy",
+    "Hashtags that worked well for you, e.g. #funny #fail. Separate with spaces. TikTok, YouTube Shorts and Reels use them right after the game hashtag, up to two thirds of each post; the rest comes fresh from the AI so you keep learning what works. Needs the AI switch in the Analysis tab.":
+        "Hashtagy, které se ti osvědčily, např. #funny #fail. Odděl je mezerami. TikTok, YouTube Shorts i Reels je použijí hned za herním hashtagem, nejvýš ve dvou třetinách příspěvku; zbytek přijde čerstvý od AI, takže se dál učíš, co funguje. Vyžaduje zapnuté AI v záložce Analýza.",
+    "Add the best hashtags for the game automatically": "Automaticky přidat nejlepší hashtagy pro hru",
+    "When you start an analysis, the hashtags that did best for the game in the Analysis tab (and the strong general ones) are added to your proven hashtags. Hashtags of other games are left out. Needs the AI switch in the Analysis tab. Off by default.":
+        "Při spuštění analýzy se k tvým osvědčeným hashtagům přidají ty, které se nejlépe osvědčily u hry z karty Analýza (a silné obecné). Hashtagy jiných her se vynechají. Vyžaduje zapnuté AI v záložce Analýza. Ve výchozím stavu vypnuto.",
+    "Strongest hashtags": "Nejsilnější hashtagy",
+    "Videos with a hashtag are compared with videos without it. Pick a game to see only its videos.":
+        "Videa s hashtagem se srovnávají s videi bez něj. Vyber hru a uvidíš jen její videa.",
+    "Game": "Hra", "Use as proven hashtags": "Použít jako osvědčené", "Ranking": "Pořadí",
+    "Overview of the channel": "Přehled kanálu",
+    "Uses the other columns of the export: where the views come from, which weekday and which length did better.":
+        "Využívá další sloupce exportu: odkud pochází zhlédnutí, který den v týdnu a jaká délka dopadly lépe.",
+    "Videos and games": "Videa a hry",
+    "Give every video its game, so the statistics and the automatic hashtags can tell the games apart. The game is guessed from the title and hashtags; you can type it yourself. Hashtags that almost only appear on one game are marked as game hashtags and are not used for other games.":
+        "Dej každému videu jeho hru, aby statistiky a automatické hashtagy rozlišily hry. Hra se hádá z názvu a hashtagů; můžeš ji napsat sama. Hashtagy, které se objevují skoro jen u jedné hry, se označí jako herní a u jiných her se nepoužijí.",
+    "Guess the games": "Odhadnout hry", "Set for videos without a game": "Nastavit videím bez hry",
+    "no game": "bez hry", "game": "hra", "Last import: {d}.": "Poslední import: {d}.",
+    "No YouTube data yet. Press \"Import YouTube export\" first.": "Zatím žádná data z YouTube. Nejdřív klikni na \"Importovat export z YouTube\".",
+    "A reliable ranking needs about {m} videos.": "Spolehlivé pořadí potřebuje asi {m} videí.",
+    "Nothing to recommend yet.": "Zatím není co doporučit.",
+    "Views come from": "Zhlédnutí pocházejí z", "Shorts feed": "Shorts feed", "search": "vyhledávání", "browsing": "procházení",
+    "hashtags": "hashtagy", "{n} videos": "{n} videí",
+    "Only a small part of your views comes from hashtag pages.": "Jen malá část zhlédnutí pochází ze stránek hashtagů.",
+    "Best weekdays (median views)": "Nejlepší dny v týdnu (medián zhlédnutí)", "By length (median views)": "Podle délky (medián zhlédnutí)",
+    "Monday": "pondělí", "Tuesday": "úterý", "Wednesday": "středa", "Thursday": "čtvrtek", "Friday": "pátek", "Saturday": "sobota", "Sunday": "neděle",
+    "Up to 15 s": "do 15 s", "16-30 s": "16-30 s", "31-60 s": "31-60 s", "Over 60 s": "přes 60 s",
+    "Not enough videos yet for an overview. Import the export again after the next videos.":
+        "Na přehled zatím není dost videí. Po dalších videích znovu importuj export.",
+    "A game was found for {n} videos.": "Hra se našla u {n} videí.",
+    "No game found. Type the game name in the Analysis tab first, or in the list below.":
+        "Žádná hra se nenašla. Nejdřív napiš název hry v záložce Analýza, nebo ho zadej v seznamu níže.",
+    "Type a game name first. Only videos without a game are changed.": "Nejdřív napiš název hry. Změní se jen videa bez hry.",
+    "Every video already has a game.": "Každé video už má hru.",
+    "Set \"{g}\" for {n} videos without a game?": "Nastavit \"{g}\" u {n} videí bez hry?",
+    "Tip: import your YouTube data in the Stats tab to get hashtags that worked for you.":
+        "Tip: v záložce Statistiky naimportuj data z YouTube a dostaneš hashtagy, které ti fungovaly.",
+    "Statistics: not enough data yet for hashtag tips.": "Statistiky: na tipy k hashtagům zatím není dost dat.",
+    "used automatically": "použijí se automaticky", "not used automatically - see the Stats tab": "automaticky se nepoužijí - viz záložka Statistiky",
+    "Strong hashtags from your statistics:": "Silné hashtagy z tvých statistik:",
+    "Hashtags from your statistics:": "Hashtagy z tvých statistik:",
+    "Hashtag settings (your own, proven, pool size) are in the Stats tab.": "Nastavení hashtagů (vlastní, osvědčené, velikost seznamu) je v záložce Statistiky.",
+})
 _CS = {" ".join(k.split()): v for k, v in CS.items()}
 
 
